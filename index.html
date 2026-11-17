@@ -121,7 +121,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--bois2);padding:6px 0}
 </header>
 <main id="app"></main>
 <input type="file" id="capture" accept="image/*,video/*" capture="environment" hidden>
-<input type="file" id="galerie" accept="image/*,video/*,audio/*" multiple hidden>
+<input type="file" id="galerie" accept="image/*,video/*" multiple hidden>
 <input type="file" id="importFichier" accept=".json,application/json" hidden>
 <script>
 'use strict';
@@ -129,7 +129,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--bois2);padding:6px 0}
    HB Relevé — Héritage Bois — relevé de chantier hors ligne
    Version 0.1 (17/11/2026). Données stockées sur le téléphone (IndexedDB).
    ===================================================================== */
-const VERSION = '0.5';
+const VERSION = '0.6';
 const FORMAT = 'hb-releve-1';
 
 /* ---------- Listes (vocabulaire Térence, Synthèse § 2) ---------- */
