@@ -80,7 +80,7 @@ details.pli .carte h2{display:none}
 .rec{animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.55}}
 .muted{color:var(--gris);font-size:14px}
-.toast{position:fixed;left:50%;top:calc(64px + env(safe-area-inset-top));transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;z-index:40;font-size:15px;max-width:90%;text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;z-index:40;font-size:15px;max-width:90%;text-align:center}
 details summary{cursor:pointer;font-weight:600;color:var(--bois2);padding:6px 0}
 .prop{border:1px solid var(--ia);border-radius:10px;padding:10px;background:#fffaf2;margin-top:10px}
 .prop label{display:flex;gap:8px;align-items:flex-start;padding:4px 0}
@@ -93,6 +93,10 @@ details summary{cursor:pointer;font-weight:600;color:var(--bois2);padding:6px 0}
 .step input{text-align:center;font-size:24px;font-weight:700;min-width:0;padding:8px}
 .aide{color:var(--gris);font-size:13px;margin:6px 0 0}
 /* appareil photo intégré */
+#recbar{position:fixed;left:8px;right:8px;top:calc(56px + env(safe-area-inset-top));z-index:30;background:#b3261e;color:#fff;border-radius:14px;padding:10px 14px;box-shadow:0 4px 14px rgba(0,0,0,.25);animation:none}
+#recbar b{animation:pulse 1s infinite}
+#recbar #recTxt{font-size:15px;margin:4px 0;max-height:4.5em;overflow:hidden}
+#recbar small{opacity:.85}
 #cam{position:fixed;inset:0;z-index:50;background:#000;display:flex;flex-direction:column}
 #cam video{flex:1;width:100%;object-fit:contain;min-height:0;background:#000;touch-action:none}
 #cam .zoom{position:absolute;left:0;right:0;bottom:150px;display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 20px}
@@ -129,7 +133,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--bois2);padding:6px 0}
    HB Relevé — Héritage Bois — relevé de chantier hors ligne
    Version 0.1 (17/11/2026). Données stockées sur le téléphone (IndexedDB).
    ===================================================================== */
-const VERSION = '0.6';
+const VERSION = '0.7';
 const FORMAT = 'hb-releve-1';
 
 /* ---------- Listes (vocabulaire Térence, Synthèse § 2) ---------- */
@@ -143,7 +147,7 @@ const VITRAGES = ['STD 4/18/4','44.2','SP10','Sans','À définir'];
 const POSES = ['Fourniture + pose','Fourniture seule'];
 const FIXES = ['Aucun','Gauche','Droite','Gauche + droite'];
 const FORMES = ['Droite','Cintrée'];
-const CINTRES = ['Surbaissé','Plein cintre','Anse de panier'];
+const CINTRES = ['Arc tendu','Plein cintre','Anse de panier'];
 const SENS_1V = ['Tirant gauche','Tirant droit'];
 const SENS_2V = ['VP à droite','VP à gauche'];
 const BAS = ['Pièce d’appui','Seuil alu'];
@@ -202,12 +206,29 @@ function nouveauDossier(){
 }
 function nouvelleOuverture(dossierId, num){
   return { id:uid(), dossierId, num, repere:'', piece:'', type:'', fixes:'Aucun', imposte:false, forme:'Droite',
-    cintre:{type:'', fleche:'', flecheRef:'', piedDroit:'', piedDroitRef:''},
-    L:'', Lref:'', H:'', Href:'', grandJour:false, carH:'', carL:'', sens:'', soubassement:false, soubH:'', bas:'',
+    cintre:{type:'Arc tendu', fleche:'', flecheRef:'Hors-tout', piedDroit:'', piedDroitRef:'Hors-tout'},
+    L:'', Lref:'Hors-tout', H:'', Href:'Hors-tout', grandJour:true, carH:'', carL:'', sens:'', soubassement:false, soubH:'', bas:'',
     criteres:{idem:true, gamme:'', essence:'', finition:'', vitrage:''},
     notes:'', dictee:'', statut:'en cours', iaChamps:[], maj:new Date().toISOString() };
 }
 const nbVantaux = t => { const m = /(\d)/.exec(t||''); if(m) return +m[1]; if(/^(Fixe)$/.test(t)) return 0; return 1; };
+
+/* ---------- Géolocalisation du chantier ---------- */
+const ATELIER = { lat:43.8547, lon:4.6273 };   // Vallabrègues, approximatif (H) : rien n'est enregistré à moins de 500 m de l'atelier
+function distanceKm(a, b){ const R6=6371, t=x=>x*Math.PI/180, dLa=t(b.lat-a.lat), dLo=t(b.lon-a.lon);
+  const h = Math.sin(dLa/2)**2 + Math.cos(t(a.lat))*Math.cos(t(b.lat))*Math.sin(dLo/2)**2; return 2*R6*Math.asin(Math.sqrt(h)); }
+function position(){ return new Promise((res, rej) => { if (!navigator.geolocation) return rej(new Error('indisponible'));
+  navigator.geolocation.getCurrentPosition(p => res({lat:p.coords.latitude, lon:p.coords.longitude, precision:Math.round(p.coords.accuracy)}), rej, {enableHighAccuracy:true, timeout:15000, maximumAge:60000}); }); }
+async function geolocaliser(dossier, manuel=false){
+  try {
+    const p = await position();
+    if (!manuel && distanceKm(p, ATELIER) < 0.5) return;            // à l'atelier : on n'enregistre pas
+    dossier.geo = Object.assign(p, {date:new Date().toISOString()}); dossier.maj = new Date().toISOString();
+    await dbPut('dossiers', dossier); if (D && D.id === dossier.id) D.geo = dossier.geo;
+    if (manuel) { toast('📍 Chantier localisé'); rafraichir(); }
+  } catch (e) { if (manuel) toast('Localisation impossible : activez la position du téléphone'); }
+}
+const lienMaps = g => `https://www.google.com/maps?q=${g.lat},${g.lon}`;
 
 /* ---------- Contrôles de cohérence (alertent, ne bloquent jamais) ---------- */
 function controles(o){
@@ -228,12 +249,10 @@ function controles(o){
     if (o.cintre.type === 'Plein cintre' && o.cintre.fleche && L && Math.abs(+o.cintre.fleche - L/2) > 30) a.push(['info','Plein cintre : flèche ≠ demi-largeur, vérifier']);
     if (o.cintre.fleche && H && +o.cintre.fleche >= H) a.push(['err','Flèche ≥ hauteur : impossible']);
   }
-  if (/^(OF|PF|Porte|Fixe)/.test(t) && !o.grandJour && !o.carH && !o.carL) a.push(['info','Carreaux par vantail non renseignés (ou cocher Grand jour)']);
   if (o.soubassement) {
     if (!o.soubH) a.push(['err','Soubassement : hauteur manquante']);
     else if (H && +o.soubH >= H) a.push(['err','Soubassement ≥ hauteur : impossible']);
     else if (+o.soubH < 200 || (H && +o.soubH > H*0.7)) a.push(['info',`Soubassement ${o.soubH} mm : vérifier`]);
-    if (!o.bas) a.push(['info','Soubassement : préciser pièce d’appui ou seuil alu']);
   }
   if (o.Lref && o.Href && o.Lref !== o.Href) a.push(['info',`Largeur en ${o.Lref.toLowerCase()}, hauteur en ${o.Href.toLowerCase()} : voulu ?`]);
   if (o.iaChamps && o.iaChamps.length) a.push(['info',`${o.iaChamps.length} case(s) remplie(s) par l’IA à vérifier (en orange)`]);
@@ -241,13 +260,13 @@ function controles(o){
 }
 
 /* ---------- État / navigation (le bouton retour Android marche) ---------- */
-let D = null, O = null, OUVS = [], MEDIAS = [];
+let D = null, O = null, OUVS = [], MEDIAS = [], PRES = null;
 const URLS = new Map();
 function urlMedia(m){ if(!URLS.has(m.id)) URLS.set(m.id, URL.createObjectURL(m.blob)); return URLS.get(m.id); }
 function aller(h){ location.hash = h; }
 window.addEventListener('hashchange', route);
 async function route(){
-  stopDictee(); stopMemo(true); fermerCamera(false);
+  if (DICT) await arreterDictee(false); stopMemo(true); fermerCamera(false);
   const h = location.hash.slice(1) || '/';
   const p = h.split('/').filter(Boolean);
   $('#retour').hidden = p.length === 0;
@@ -274,7 +293,7 @@ async function sauverMaintenant(){
   if (D) { D.maj = new Date().toISOString(); await dbPut('dossiers', D); }
   if (O) { O.maj = new Date().toISOString(); await dbPut('ouvertures', O); }
 }
-window.addEventListener('pagehide', sauverMaintenant);
+window.addEventListener('pagehide', () => { if (DICT) arreterDictee(false); sauverMaintenant(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) sauverMaintenant(); });
 
 /* ---------- Composants ---------- */
@@ -302,6 +321,7 @@ document.addEventListener('input', e => {
   if (el.inputMode === 'numeric') { v = v.replace(/[^0-9]/g,''); if (v !== el.value) el.value = v; }
   setP(c, p, v);
   c.iaChamps = (c.iaChamps||[]).filter(x => x !== p); el.classList.remove('ia-flag');
+  if (c === O && (p === 'carH' || p === 'carL') && v) O.grandJour = false;
   if (c === O && (p === 'carH' || p === 'carL') && v) { const autre = p === 'carH' ? 'carL' : 'carH'; if (!O[autre]) { O[autre] = '1'; const e2 = document.querySelector(`[data-f="${autre}"]`); if (e2) e2.value = '1'; } }
   if (c === O && O.statut === 'validée') { O.statut = 'modifiée'; }
   sauver();
@@ -323,7 +343,8 @@ document.addEventListener('click', e => {
 async function vueListe(){
   D = null; O = null;
   $('#titre').textContent = 'HB Relevé — dossiers';
-  const ds = (await dbAll('dossiers')).filter(d => !d.archive).sort((a,b)=>b.maj.localeCompare(a.maj));
+  let ds = (await dbAll('dossiers')).filter(d => !d.archive).sort((a,b)=>b.maj.localeCompare(a.maj));
+  if (PRES) ds = ds.map(d => Object.assign(d, {_km: d.geo ? distanceKm(PRES, d.geo) : Infinity})).sort((a,b) => a._km - b._km);
   const ouvs = await dbAll('ouvertures');
   $('#app').innerHTML = `
   <div class="carte">
@@ -333,18 +354,20 @@ async function vueListe(){
       <button class="btn sec" id="imp">Importer un dossier préparé</button>
     </div>
     ${REG.dbxRefresh ? `<button class="btn sec plein" style="margin-top:8px" id="impDbx">Récupérer les dossiers préparés (Dropbox)</button>` : ''}
+    <button class="btn sec plein" style="margin-top:8px" id="pres">📍 ${PRES ? 'Trier par date' : 'Dossiers près de moi'}</button>
   </div>
   ${ds.length ? ds.map(d => {
     const os = ouvs.filter(o => o.dossierId === d.id);
     const val = os.filter(o => o.statut === 'validée').length;
     const env = d.envois.length ? `<span class="badge env">envoyé ${d.envois[d.envois.length-1].date.slice(5,10).split('-').reverse().join('/')}</span>` : '';
     return `<div class="item" data-ouvrir="${d.id}"><div class="t"><b>${esc(d.client||'(sans nom)')}${d.test?' · TEST':''}</b>
-      <small>${esc(d.dateRdv||'')} · ${os.length} ouverture(s) · ${val} validée(s)${d.numero?' · '+esc(d.numero):''}</small></div>${env}</div>`;
+      <small>${PRES ? (d._km === Infinity ? 'non localisé · ' : `📍 ${d._km < 1 ? Math.round(d._km*1000)+' m' : d._km.toFixed(1).replace('.',',')+' km'} · `) : ''}${esc(d.dateRdv||'')} · ${os.length} ouverture(s) · ${val} validée(s)${d.numero?' · '+esc(d.numero):''}</small></div>${env}</div>`;
   }).join('') : `<p class="muted">Aucun dossier. Créez-en un, ou importez un dossier préparé par Claude.</p>`}
   <details><summary>Dossiers archivés</summary><div id="arch"></div></details>
   <p class="muted">Version ${VERSION} · données gardées sur ce téléphone.</p>`;
   $('#nv').onclick = async () => { const d = nouveauDossier(); await dbPut('dossiers', d); aller('/d/'+d.id); };
   $('#imp').onclick = () => $('#importFichier').click();
+  $('#pres').onclick = async () => { if (PRES) { PRES = null; return vueListe(); } try { toast('Recherche de la position…'); PRES = await position(); vueListe(); } catch (e) { toast('Position indisponible : activez-la sur le téléphone'); } };
   if ($('#impDbx')) $('#impDbx').onclick = importerDepuisDropbox;
   document.querySelectorAll('[data-ouvrir]').forEach(x => x.onclick = () => aller('/d/'+x.dataset.ouvrir));
   const ar = (await dbAll('dossiers')).filter(d => d.archive);
@@ -363,7 +386,7 @@ function vueDossier(){
   $('#titre').textContent = D.client || 'Nouveau dossier';
   const md = MEDIAS.filter(m => !m.ouvertureId);
   if (!PLIS[D.id]) PLIS[D.id] = new Set((!D.client && !OUVS.length) ? ['client','criteres'] : []);
-  const resClient = [D.client, D.adresse, D.dateRdv && D.dateRdv.split('-').reverse().join('/'), D.test?'TEST':''].filter(Boolean).join(' · ') || 'à renseigner';
+  const resClient = [D.client, D.adresse, D.dateRdv && D.dateRdv.split('-').reverse().join('/'), D.geo?'📍':'', D.test?'TEST':''].filter(Boolean).join(' · ') || 'à renseigner';
   const resCrit = [D.gamme, D.essence, D.finition, D.vitrage, D.pose].filter(Boolean).join(' · ') || 'à renseigner';
   const resDict = D.dictee ? D.dictee.slice(0,60) + (D.dictee.length>60?'…':'') : 'vide';
   const resMed = md.length ? `${md.filter(m=>m.kind==='photo').length} photo(s) · ${md.filter(m=>m.kind==='video').length} vidéo(s) · ${md.filter(m=>m.kind==='audio').length} mémo(s)` : 'aucun';
@@ -387,7 +410,10 @@ function vueDossier(){
     <div><label class="l">Date du RDV</label>${champ('dateRdv', D, {type:'date'})}</div></div>
     <div class="ligne2"><div><label class="l">E-mail</label>${champ('email', D, {type:'email'})}</div>
     <div><label class="l">N° dossier HB</label>${champ('numero', D, {ph:'HB-…'})}</div></div>
-    <label class="coche"><input type="checkbox" id="estTest" ${D.test?'checked':''}> Dossier de TEST</label>`)}
+    <label class="coche"><input type="checkbox" id="estTest" ${D.test?'checked':''}> Dossier de TEST</label>
+    <label class="l">Localisation du chantier</label>
+    ${D.geo ? `<p style="margin:0 0 8px">📍 ${D.geo.lat.toFixed(5)}, ${D.geo.lon.toFixed(5)} <span class="muted">(± ${D.geo.precision} m, ${D.geo.date.slice(0,10).split('-').reverse().join('/')})</span><br><a href="${lienMaps(D.geo)}" target="_blank" rel="noopener">Ouvrir dans Maps</a></p>` : '<p class="aide" style="margin:0 0 8px">Enregistrée toute seule à la première ouverture saisie chez le client (pas à l’atelier).</p>'}
+    <button class="btn sec plein" id="geoBtn">📍 ${D.geo ? 'Relocaliser ici' : 'Localiser le chantier ici'}</button>`)}
   ${pli('criteres', 'Critères généraux', resCrit, `
     <label class="l">Nature des travaux</label>${chips('nature', NATURES, D, true)}
     <label class="l">Gamme</label>${chips('gamme', GAMMES, D)}${champ('gamme', D, {ph:'ou saisir / dicter une autre gamme'})}
@@ -411,7 +437,8 @@ function vueDossier(){
   document.querySelectorAll('details.pli').forEach(d => d.addEventListener('toggle', () => { d.open ? PLIS[D.id].add(d.dataset.pli) : PLIS[D.id].delete(d.dataset.pli); }));
   $('#estTest').onchange = e => { D.test = e.target.checked; sauver(); };
   document.querySelectorAll('[data-o]').forEach(x => x.onclick = () => aller('/o/'+x.dataset.o));
-  $('#nvO').onclick = async () => { await sauverMaintenant(); const o = nouvelleOuverture(D.id, (OUVS.at(-1)?.num||0)+1); await dbPut('ouvertures', o); aller('/o/'+o.id); };
+  $('#nvO').onclick = async () => { await sauverMaintenant(); if (!D.geo) geolocaliser(D); const o = nouvelleOuverture(D.id, (OUVS.at(-1)?.num||0)+1); await dbPut('ouvertures', o); aller('/o/'+o.id); };
+  if ($('#geoBtn')) $('#geoBtn').onclick = () => geolocaliser(D, true);
   $('#envoyer').onclick = async () => { await sauverMaintenant(); aller('/envoi/'+D.id); };
   $('#terminer').onclick = terminer;
   $('#archiver').onclick = async () => { D.archive = !D.archive; await sauverMaintenant(); toast(D.archive?'Dossier archivé':'Dossier désarchivé'); aller('/'); };
@@ -423,88 +450,96 @@ async function terminer(){
   toast('Enregistré ✓'); aller('/');
 }
 
-/* =================== VUE : ouverture =================== */
+/* =================== VUE : ouverture (v0.7 : le strict minimum, la voix pour le reste) =================== */
 function vueOuverture(){
   $('#titre').textContent = `${D.client||'Dossier'} · N°${O.num}`;
+  if (!PLIS[D.id]) PLIS[D.id] = new Set();
   const nv = nbVantaux(O.type);
   const mo = MEDIAS.filter(m => m.ouvertureId === O.id);
-  const c = O.criteres;
+  const c = O.criteres; const ci = O.forme === 'Cintrée';
+  const cote = (path, ph) => champ(path, O, {num:1, cote:1, ph}).replace('data-f','data-live="1" data-f');
   $('#app').innerHTML = `
   <div data-cible="o">
-  ${blocDictee('o')}
   <div class="carte">
     <h2>Ouverture n°${O.num}</h2>
     <div class="ligne2"><div><label class="l">Repère</label>${champ('repere', O, {ph:'ex. OF-01'})}</div>
     <div><label class="l">Pièce / étage</label>${champ('piece', O, {ph:'ex. cuisine RDC'})}</div></div>
     <label class="l">Type d’ouvrage</label>${chips('type', TYPES, O, false, 'g4')}
-    ${/^(OF|PF)/.test(O.type)||O.type==='Fixe' ? `<label class="l">Fixe latéral</label>${chips('fixes', FIXES, O, false, 'g2')}
-      <label class="coche"><input type="checkbox" id="imposte" ${O.imposte?'checked':''}> Imposte</label>` : ''}
     <label class="l">Forme</label>${chips('forme', FORMES, O, false, 'g2')}
+    ${ci ? `<label class="l">Cintre</label>${chips('cintre.type', CINTRES, O, false, 'g3')}` : ''}
   </div>
   <div class="carte">
-    <h2>Cotes (mm)</h2>
-    <label class="l">Largeur</label>${champ('L', O, {num:1, cote:1, ph:'largeur'}).replace('data-f','data-live="1" data-f')}
-    ${chips('Lref', REFS, O, false, 'g3')}
-    <label class="l">Hauteur</label>${champ('H', O, {num:1, cote:1, ph:'hauteur'}).replace('data-f','data-live="1" data-f')}
-    ${chips('Href', REFS, O, false, 'g3')}
-    ${O.forme === 'Cintrée' ? `
-      <label class="l">Type de cintre</label>${chips('cintre.type', CINTRES, O, false, 'g3')}
-      <div class="ligne2"><div><label class="l">Flèche</label>${champ('cintre.fleche', O, {num:1, cote:1}).replace('data-f','data-live="1" data-f')}</div>
-      <div><label class="l">Pied droit</label>${champ('cintre.piedDroit', O, {num:1, cote:1})}</div></div>
-      <label class="l">Flèche en</label>${chips('cintre.flecheRef', ['Tableau','Hors-tout'], O, false, 'g2')}
-      <label class="l">Pied droit en</label>${chips('cintre.piedDroitRef', ['Tableau','Hors-tout'], O, false, 'g2')}` : ''}
+    <h2>Cotes (mm) · hors-tout par défaut</h2>
+    <label class="l">Largeur</label>${cote('L','largeur')}${chips('Lref', REFS, O, false, 'g3')}
+    <label class="l">Hauteur</label>${cote('H','hauteur')}${chips('Href', REFS, O, false, 'g3')}
+    ${ci ? `<label class="l">Flèche</label>${cote('cintre.fleche','flèche')}${chips('cintre.flecheRef', ['Hors-tout','Tableau'], O, false, 'g2')}` : ''}
   </div>
   <div class="carte">
-    <h2>Carreaux par vantail · sens</h2>
-    ${/^(Volet)/.test(O.type) ? '<p class="muted">Volet : pas de carreaux.</p>' : `
-    <label class="coche"><input type="checkbox" id="grandJour" ${O.grandJour?'checked':''}> Grand jour (pas de petit bois)</label>
+    <h2>Sens · carreaux · soubassement</h2>
+    ${nv === 1 ? `<label class="l">Sens (vue intérieure)</label>${chips('sens', SENS_1V, O, false, 'g2')}` : nv >= 2 ? `<label class="l">Sens (vue intérieure)</label>${chips('sens', SENS_2V, O, false, 'g2')}` : ''}
+    ${/^Volet/.test(O.type) ? '' : `
+    <label class="coche"><input type="checkbox" id="grandJour" ${O.grandJour?'checked':''}> Grand jour (par défaut)</label>
     ${O.grandJour ? '' : `<div class="ligne3">
       <div class="step"><span>En hauteur</span><button data-step="carH" data-d="-1">−</button>${champ('carH', O, {num:1})}<button data-step="carH" data-d="1">＋</button></div>
       <div class="step"><span>En largeur</span><button data-step="carL" data-d="-1">−</button>${champ('carL', O, {num:1})}<button data-step="carL" data-d="1">＋</button></div>
-      <p class="aide">Si vous ne remplissez qu’un sens, l’autre vaut 1.</p>
+      <p class="aide">Carreaux par vantail. Un seul sens donné : l’autre vaut 1. Répartition différente VP / VS / fixe / imposte : dans les notes.</p>
     </div>`}
-    <label class="coche"><input type="checkbox" id="soub" ${O.soubassement?'checked':''}> Soubassement (panneau)</label>
-    ${O.soubassement ? `<label class="l">Hauteur de soubassement (mm)</label>${champ('soubH', O, {num:1, cote:1, ph:'soubassement'}).replace('data-f','data-live="1" data-f')}
-      <p class="aide">Du bas de la menuiserie (dessous pièce d’appui ou seuil alu du dormant) au dessus de la traverse intermédiaire = début du clair de vitrage.</p>
-      <label class="l">Bas du dormant</label>${chips('bas', BAS, O, false, 'g2')}` : ''}`}
-    ${nv === 1 ? `<label class="l">Sens (vue intérieure)</label>${chips('sens', SENS_1V, O, false, 'g2')}` : nv >= 2 ? `<label class="l">Sens (vue intérieure)</label>${chips('sens', SENS_2V, O, false, 'g2')}` : ''}
+    <label class="coche"><input type="checkbox" id="soub" ${O.soubassement?'checked':''}> Soubassement</label>
+    ${O.soubassement ? `${cote('soubH','hauteur du soubassement')}
+      <p class="aide">Du dessous de la pièce d’appui ou du seuil alu au dessus de la traverse intermédiaire (début du clair de vitrage).</p>
+      ${chips('bas', BAS, O, false, 'g2')}` : ''}`}
   </div>
   <div class="carte">
-    <h2>Critères</h2>
-    <label class="coche"><input type="checkbox" id="idem" ${c.idem?'checked':''}> Comme le dossier (${esc([D.gamme,D.essence,D.finition].filter(Boolean).join(' · ')||'non renseigné')})</label>
+    <h2>Notes et dictée</h2>
+    <label class="l">Notes (pose, fermeture, allège, appui, état, fixe, imposte…)</label>${champ('notes', O, {zone:1})}
+    <label class="l">Texte de la dictée</label>${champ('dictee', O, {zone:1, ph:'Touchez 🎤 en bas de l’écran et parlez.'})}
+    <button class="btn ia plein" id="btnIA" style="margin-top:8px" ${navigator.onLine&&REG.cleIA?'':'disabled'}>✨ Remplir les cases depuis la dictée</button>
+    ${!REG.cleIA ? '<p class="aide">IA non configurée : la dictée et le son sont gardés pour Claude au bureau.</p>' : !navigator.onLine ? '<p class="aide">Hors ligne : la dictée et le son sont gardés ; l’IA remplira les cases quand le réseau revient.</p>' : ''}
+    <div id="propIA"></div>
+  </div>
+  <div class="carte">
+    <h2>Photos, vidéos, dictées</h2>
+    ${blocMedias(mo)}
+  </div>
+  ${pli('plus', 'Plus de détails', [O.fixes!=='Aucun'?'fixe '+O.fixes.toLowerCase():'', O.imposte?'imposte':'', c.idem?'':'critères propres'].filter(Boolean).join(' · ') || 'fixe latéral, imposte, critères propres', `
+    <label class="l">Fixe latéral</label>${chips('fixes', FIXES, O, false, 'g2')}
+    <label class="coche"><input type="checkbox" id="imposte" ${O.imposte?'checked':''}> Imposte</label>
+    ${ci ? `<label class="l">Pied droit (facultatif)</label>${cote('cintre.piedDroit','pied droit')}${chips('cintre.piedDroitRef', ['Hors-tout','Tableau'], O, false, 'g2')}` : ''}
+    <label class="coche"><input type="checkbox" id="idem" ${c.idem?'checked':''}> Critères comme le dossier (${esc([D.gamme,D.essence,D.finition].filter(Boolean).join(' · ')||'non renseignés')})</label>
     ${c.idem ? '' : `
       <label class="l">Gamme</label>${chips('criteres.gamme', GAMMES, O)}
       <label class="l">Essence</label>${chips('criteres.essence', ESSENCES, O)}
-      <label class="l">Finition</label>${chips('criteres.finition', FINITIONS, O)}
-      <label class="l">Vitrage</label>${chips('criteres.vitrage', VITRAGES, O)}`}
-    <label class="l">Remarques (état, contraintes, allège, appui…)</label>${champ('notes', O, {zone:1, ph:'Le micro du clavier fonctionne ici'})}
-  </div>
-  <div class="carte">
-    <h2>Photos, vidéos, mémos</h2>
-    ${blocMedias(mo)}
-  </div>
+      <label class="l">Finition</label>${chips('criteres.finition', FINITIONS, O, false, 'g2')}
+      <label class="l">Vitrage</label>${chips('criteres.vitrage', VITRAGES, O)}`}`)}
   </div>
   <div class="carte">
     <h2>Contrôles</h2>
     <ul class="alertes" id="ctrl"></ul>
-    <div class="barre">
+    <button class="btn ${O.statut==='validée'?'sec':'vert'} plein" id="valider">${O.statut==='validée'?'✓ Ouverture validée':'✓ Valider l’ouverture'}</button>
+    <div class="barre" style="margin-top:8px">
       <button class="btn sec" id="dupliquer">Dupliquer</button>
       <button class="btn sec" id="supprimer">Supprimer</button>
     </div>
   </div>
   <div class="fab">
     <button class="btn sec" id="terminer">Terminer</button>
-    <button class="btn ${O.statut==='validée'?'sec':'vert'}" id="valider">${O.statut==='validée'?'✓ Validée':'✓ Valider'}</button>
+    <button class="btn ${DICT?'rouge rec':''}" id="fabDict" aria-label="Dicter">${DICT?'■':'🎤'}</button>
+    <button class="btn" id="fabCam" aria-label="Photo / vidéo">📷</button>
     <button class="btn" id="suivante">Suivante →</button>
   </div>`;
   majControles();
+  document.querySelectorAll('details.pli').forEach(d => d.addEventListener('toggle', () => { d.open ? PLIS[D.id].add(d.dataset.pli) : PLIS[D.id].delete(d.dataset.pli); }));
   const cb = (id, fn) => { const el = $('#'+id); if (el) el.onchange = e => { fn(e.target.checked); if(O.statut==='validée') O.statut='modifiée'; sauver(); const y=scrollY; vueOuverture(); scrollTo(0,y); }; };
-  cb('imposte', v => O.imposte = v); cb('grandJour', v => O.grandJour = v); cb('soub', v => O.soubassement = v); cb('idem', v => O.criteres.idem = v);
+  cb('imposte', v => O.imposte = v); cb('soub', v => O.soubassement = v); cb('idem', v => O.criteres.idem = v);
+  cb('grandJour', v => { O.grandJour = v; if (v) { O.carH = ''; O.carL = ''; } });
   document.querySelectorAll('[data-step]').forEach(b => b.onclick = () => {
     const k = b.dataset.step; O[k] = String(Math.max(1, (+O[k]||0) + (+b.dataset.d))); O.iaChamps = O.iaChamps.filter(x=>x!==k);
-    const autre = k === 'carH' ? 'carL' : 'carH'; if (!O[autre]) O[autre] = '1';
+    const autre = k === 'carH' ? 'carL' : 'carH'; if (!O[autre]) O[autre] = '1'; O.grandJour = false;
     if(O.statut==='validée') O.statut='modifiée'; sauver(); const y=scrollY; vueOuverture(); scrollTo(0,y);
   });
+  $('#btnIA').onclick = () => remplirIA('o');
+  $('#fabDict').onclick = () => basculerDictee('o');
+  $('#fabCam').onclick = () => ouvrirCamera(O.id);
   $('#valider').onclick = async () => {
     const err = controles(O).filter(x => x[0]==='err');
     if (err.length && !confirm(`Il reste ${err.length} point(s) à corriger :\n- ${err.map(x=>x[1]).join('\n- ')}\n\nValider quand même ?`)) return;
@@ -527,7 +562,7 @@ function vueOuverture(){
     for (const m of MEDIAS.filter(m => m.ouvertureId === O.id)) await dbDel('medias', m.id);
     await dbDel('ouvertures', O.id); const id = D.id; O = null; aller('/d/'+id);
   };
-  brancherMedias(O.id); brancherDictee('o');
+  brancherMedias(O.id);
 }
 function majControles(){
   const el = $('#ctrl'); if (!el) return;
@@ -540,14 +575,13 @@ let mediaCible = null;
 function blocMedias(list){
   return `<div class="barre" style="margin-bottom:10px">
     <button class="btn" data-cap="1">📷 Photo / vidéo</button>
-    <button class="btn sec" data-memo="1" id="btnMemo">🎙 Mémo vocal</button>
   </div>
   <button class="btn sec plein" data-gal="1" style="margin-bottom:10px;min-height:40px;padding:8px">Ajouter depuis la galerie</button>
   <div class="medias">${list.map(m => `
     <div class="media">
       ${m.kind==='photo' ? `<img src="${urlMedia(m)}" alt="">` : m.kind==='video' ? `<video src="${urlMedia(m)}" controls preload="metadata"></video>` : `<div class="c"><b>🎙 Mémo</b></div><audio src="${urlMedia(m)}" controls></audio>`}
       <div class="c">
-        ${m.kind==='photo' ? '<small class="muted">Analysée par Claude au bureau</small>' : `<label><input type="checkbox" data-transcrire="${m.id}" ${m.transcrire?'checked':''}> À transcrire (infos importantes)</label>`}
+        ${m.kind==='photo' ? `<label><input type="checkbox" data-tele="${m.id}" ${m.telemetre?'checked':''}> 📏 Écran du télémètre</label>` : `<label><input type="checkbox" data-transcrire="${m.id}" ${m.transcrire?'checked':''}> À transcrire${m.kind==='audio'?' (dictée)':''}</label>`}
         <input data-mnote="${m.id}" value="${esc(m.note||'')}" placeholder="légende" style="margin-top:6px;padding:6px;font-size:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><small class="muted">${m.date.slice(11,16)}${m.envoye?' · envoyé':''}</small>
         <button class="chip" data-mdel="${m.id}" style="padding:4px 10px">✕</button></div>
@@ -559,14 +593,15 @@ function brancherMedias(ouvertureId){
   document.querySelectorAll('[data-gal]').forEach(b => b.onclick = () => { mediaCible = ouvertureId; $('#galerie').value=''; $('#galerie').click(); });
   document.querySelectorAll('[data-memo]').forEach(b => b.onclick = () => basculerMemo(ouvertureId, b));
   document.querySelectorAll('[data-transcrire]').forEach(c => c.onchange = async () => { const m = MEDIAS.find(x=>x.id===c.dataset.transcrire); m.transcrire = c.checked; await dbPut('medias', m); });
+  document.querySelectorAll('[data-tele]').forEach(c => c.onchange = async () => { const m = MEDIAS.find(x=>x.id===c.dataset.tele); m.telemetre = c.checked; await dbPut('medias', m); });
   document.querySelectorAll('[data-mnote]').forEach(c => c.onchange = async () => { const m = MEDIAS.find(x=>x.id===c.dataset.mnote); m.note = c.value; await dbPut('medias', m); });
   document.querySelectorAll('[data-mdel]').forEach(b => b.onclick = async () => {
     if (!confirm('Retirer ce média du dossier (sur ce téléphone) ?')) return;
     await dbDel('medias', b.dataset.mdel); MEDIAS = MEDIAS.filter(m => m.id !== b.dataset.mdel); rafraichir();
   });
 }
-async function enregistrerMedia(blob, kind, nom){
-  const m = { id:uid(), dossierId:D.id, ouvertureId:mediaCible, kind, mime:blob.type || (kind==='photo'?'image/jpeg':'video/webm'), blob, nom, date:new Date().toISOString(), transcrire: kind==='audio', note:'', envoye:false };
+async function enregistrerMedia(blob, kind, nom, extra={}){
+  const m = Object.assign({ id:uid(), dossierId:D.id, ouvertureId:mediaCible, kind, mime:blob.type || (kind==='photo'?'image/jpeg':kind==='audio'?'audio/webm':'video/webm'), blob, nom, date:new Date().toISOString(), transcrire: kind==='audio', note:'', envoye:false }, extra);
   await dbPut('medias', m); MEDIAS.push(m); return m;
 }
 /* Appareil photo intégré : s'ouvre directement, focale 1 par défaut, zoom réglable, choix de l'objectif */
@@ -593,7 +628,7 @@ async function ouvrirCamera(ouvertureId){
   catch (e) { try { lsSet('hb-cam-device',''); stream = await fluxCamera(null); } catch (e2) { toast('Appareil photo refusé : autorisez-le dans Chrome'); return repli(); } }
   const el = document.createElement('div'); el.id = 'cam';
   el.innerHTML = `<video autoplay playsinline muted></video><div class="flash"></div>
-    <div class="haut"><button id="camFermer">✕ Fermer</button><span id="camNb"></span></div>
+    <div class="haut"><button id="camFermer">✕ Fermer</button><span id="camNb"></span><button id="camTele">📏 Télémètre : non</button></div>
     <div class="zoom" hidden><div class="presets"></div><input type="range" id="camZoom"></div>
     <div class="bas"><div class="lib"><button class="rec" id="camRec" aria-label="Vidéo"></button><br>Vidéo</div>
       <div class="lib"><button class="declic" id="camPhoto" aria-label="Photo"></button><br>Photo</div>
@@ -653,13 +688,14 @@ async function ouvrirCamera(ouvertureId){
     } catch (e) { toast('Objectif indisponible'); lsSet('hb-cam-device',''); CAM.stream = await fluxCamera(null); await brancherFlux(); }
   };
   el.querySelector('#camFermer').onclick = () => fermerCamera(true);
+  el.querySelector('#camTele').onclick = e => { CAM.tele = !CAM.tele; e.target.textContent = '📏 Télémètre : ' + (CAM.tele ? 'OUI' : 'non'); e.target.style.background = CAM.tele ? '#c26a00' : ''; };
   el.querySelector('#camPhoto').onclick = async () => {
     try {
       let blob = null;
       if ('ImageCapture' in window) { try { blob = await new ImageCapture(track()).takePhoto(); } catch(_){} }
       if (!blob) { const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v,0,0); blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92)); }
       const f = el.querySelector('.flash'); f.style.opacity = .9; setTimeout(() => f.style.opacity = 0, 120);
-      await enregistrerMedia(blob, 'photo', 'photo'); CAM.n++; nb();
+      await enregistrerMedia(blob, 'photo', CAM.tele ? 'telemetre' : 'photo', {telemetre: !!CAM.tele}); CAM.n++; nb();
     } catch (e) { toast('Photo impossible : ' + e.message); }
   };
   el.querySelector('#camRec').onclick = () => {
@@ -726,45 +762,74 @@ async function basculerMemo(ouvertureId, btn){
 function stopMemo(){ if (rec && rec.state !== "inactive") rec.stop(); }
 
 /* =================== Dictée + IA =================== */
+/* Dossier : bloc dictée (le bouton 🎤 enregistre toujours le son ; le texte en direct quand le téléphone y arrive) */
 function blocDictee(k){
   const c = k === 'd' ? D : O;
-  const enLigne = navigator.onLine, iaOk = !!REG.cleIA;
   return `<div class="carte">
-    <h2>Dictée ${k==='d'?'du dossier':'de l’ouverture'}</h2>
-    <p class="muted" style="margin:0 0 8px">Dictez tout d’une traite (ou tapez). Corrigez le texte si besoin, puis « Remplir les cases ». Les cases remplies par l’IA passent en orange jusqu’à votre vérification.</p>
-    ${champ('dictee', c, {zone:1, ph: k==='d' ? 'ex. Chantier Diaz à Tarascon, gamme recouvrement, pin, pré-peinture blanche, pose comprise…' : 'ex. OF2, cuisine, largeur 1200 tableau, hauteur 1350 tableau, trois carreaux en hauteur deux en largeur par vantail…'})}
+    <h2>Dictée</h2>
+    ${champ('dictee', c, {zone:1, ph:'ex. Chantier Diaz à Tarascon, recouvrement Boizéal, pré-peinture blanche, dépose totale…'})}
     <div class="barre" style="margin-top:8px">
-      <button class="btn sec" id="btnDictee">🎤 Dicter</button>
-      <button class="btn ia" id="btnIA" ${enLigne&&iaOk?'':'disabled'}>✨ Remplir les cases</button>
+      <button class="btn ${DICT?'rouge rec':''}" id="btnDictee">${DICT?'■ Arrêter':'🎤 Dicter'}</button>
+      <button class="btn ia" id="btnIA" ${navigator.onLine&&REG.cleIA?'':'disabled'}>✨ Remplir les cases</button>
     </div>
-    ${!iaOk ? '<p class="muted">IA non configurée (Réglages). La dictée reste enregistrée et sera lue par Claude au bureau.</p>' : !enLigne ? '<p class="muted">Hors ligne : la dictée est gardée. « Remplir les cases » dès que le réseau revient, ou Claude la lira au bureau.</p>' : ''}
     <div id="propIA"></div>
   </div>`;
 }
-let reco = null;
 function brancherDictee(k){
   const b = $('#btnDictee'), ia = $('#btnIA');
-  if (b) b.onclick = () => reco ? stopDictee() : startDictee(k, b);
+  if (b) b.onclick = () => basculerDictee(k);
   if (ia) ia.onclick = () => remplirIA(k);
 }
-function startDictee(k, btn){
+function stopDictee(){}
+let DICT = null;
+async function basculerDictee(k){
+  if (DICT) return arreterDictee(true);
+  const c = k === 'd' ? D : O;
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({audio:true}); } catch (e) { return toast('Micro refusé : autorisez-le dans Chrome'); }
+  const rec = new MediaRecorder(stream); const chunks = [];
+  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+  DICT = { k, c, store: k === 'd' ? 'dossiers' : 'ouvertures', ouvId: k === 'o' ? O.id : null, stream, rec, chunks, t0: Date.now(), texte:'', prov:'' };
+  rec.start(1000);
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return toast('Dictée directe indisponible : utilisez le micro du clavier dans la case');
-  const c = k === 'd' ? D : O; const ta = document.querySelector(`[data-cible="${k}"] [data-f="dictee"]`);
-  reco = new SR(); reco.lang = 'fr-FR'; reco.continuous = true; reco.interimResults = true;
-  let base = (c.dictee || '').trim();
-  reco.onresult = e => {
-    let fin = '', prov = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) { const r = e.results[i]; if (r.isFinal) fin += r[0].transcript; else prov += r[0].transcript; }
-    if (fin) { base = (base ? base + ' ' : '') + fin.trim(); c.dictee = base; sauver(); }
-    if (ta) ta.value = base + (prov ? ' ' + prov : '');
-  };
-  reco.onerror = e => { toast(e.error === 'network' ? 'Dictée : pas de réseau, utilisez le micro du clavier' : 'Dictée interrompue (' + e.error + ')'); };
-  reco.onend = () => { if (reco && reco._actif) { try { reco.start(); } catch(_){} } else { reco = null; if (btn) { btn.textContent = '🎤 Dicter'; btn.classList.remove('rec','rouge'); btn.classList.add('sec'); } } };
-  reco._actif = true; reco.start();
-  btn.textContent = '■ Arrêter la dictée'; btn.classList.add('rec','rouge'); btn.classList.remove('sec');
+  if (SR) { try {
+    const r = new SR(); r.lang = 'fr-FR'; r.continuous = true; r.interimResults = true;
+    r.onresult = e => { if (!DICT) return; let prov = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) { const x = e.results[i]; if (x.isFinal) DICT.texte = (DICT.texte ? DICT.texte + ' ' : '') + x[0].transcript.trim(); else prov += x[0].transcript; }
+      DICT.prov = prov; majBarre(); };
+    r.onerror = e => { if (DICT) DICT.srErr = e.error; };
+    r.onend = () => { if (DICT && DICT.sr === r && !DICT.srErr) { try { r.start(); } catch(_){} } };
+    r.start(); DICT.sr = r;
+  } catch(_){} }
+  const bar = document.createElement('div'); bar.id = 'recbar';
+  bar.innerHTML = '<b>● Dictée</b> <span id="recT">0:00</span><div id="recTxt"></div><small>Touchez ici ou ■ pour arrêter</small>';
+  bar.onclick = () => arreterDictee(true);
+  document.body.appendChild(bar);
+  DICT.timer = setInterval(majBarre, 500); majBarre();
+  const fb = $('#fabDict'); if (fb) { fb.textContent = '■'; fb.classList.add('rouge','rec'); }
+  const bd = $('#btnDictee'); if (bd) { bd.textContent = '■ Arrêter'; bd.classList.add('rouge','rec'); }
 }
-function stopDictee(){ if (reco) { reco._actif = false; try { reco.stop(); } catch(_){} } }
+function majBarre(){
+  if (!DICT) return; const s = Math.round((Date.now() - DICT.t0)/1000);
+  const t = $('#recT'); if (t) t.textContent = `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+  const x = $('#recTxt'); if (x) x.textContent = (DICT.texte + ' ' + (DICT.prov||'')).trim() || (DICT.srErr ? 'Son enregistré (texte indisponible ici, lu au bureau)' : '…');
+}
+async function arreterDictee(rafraichirVue){
+  const d = DICT; if (!d) return; DICT = null;
+  clearInterval(d.timer); $('#recbar')?.remove();
+  if (d.sr) { try { d.sr.stop(); } catch(_){} }
+  await new Promise(res => { d.rec.onstop = res; try { d.rec.stop(); } catch(_) { res(); } });
+  d.stream.getTracks().forEach(t => t.stop());
+  const garde = mediaCible; mediaCible = d.ouvId;
+  if (d.chunks.length) await enregistrerMedia(new Blob(d.chunks, {type: d.chunks[0].type || 'audio/webm'}), 'audio', 'dictee', {transcrire:true, note: d.texte ? d.texte.slice(0,80) : 'dictée'});
+  mediaCible = garde;
+  const texte = (d.texte + ' ' + (d.prov||'')).trim();
+  if (texte) { d.c.dictee = (d.c.dictee ? d.c.dictee + '\n' : '') + texte; d.c.maj = new Date().toISOString(); await dbPut(d.store, d.c); }
+  if (!rafraichirVue) return;
+  rafraichir();
+  if (texte && navigator.onLine && REG.cleIA) remplirIA(d.k);
+  else toast(texte ? 'Dictée enregistrée' : 'Son enregistré (texte lu au bureau)');
+}
 
 const SCHEMA_O = {
   repere:'texte', piece:'texte', type:TYPES, fixes:FIXES, imposte:'booléen', forme:FORMES,
@@ -781,23 +846,32 @@ Règles :
 - Ne remplis QUE ce qui est dit dans la dictée. N'invente rien, ne mets aucune valeur par défaut.
 - Cotes TOUJOURS converties en millimètres, nombres entiers, même si Térence parle en mètres ou en centimètres : "2 mètres" = 2000 ; "50 cm" = 500 ; "1 m 20" ou "un mètre vingt" = 1200 ; "1 m 35" = 1350. "120" dit pour une fenêtre = probablement 1200 mm → mets 1200 ET signale le doute.
 - Carreaux par vantail : si seul le nombre EN HAUTEUR est dit, carL = 1 ; si seul le nombre EN LARGEUR est dit, carH = 1 (ex. fixe 2000 × 500 avec "6 carreaux sur la largeur" → carH 1, carL 6). Si les deux sont dits, mets les deux (ex. "8 carreaux, 4 en hauteur et 2 en largeur" → 4 et 2). Si seul un total est dit sans répartition, ne remplis pas et signale-le dans "doutes".
+- Valeurs par défaut (déjà dans la fiche, ne les change que si la dictée dit autre chose) : cotes en Hors-tout (largeur, hauteur, flèche, pied droit) ; cintre non précisé = "Arc tendu" ; aucun carreau dit = grandJour true. Si des carreaux sont dits : grandJour false.
+- Répartition de carreaux différente entre VP et VS, dans un fixe adossé ou dans une imposte (imposte dans le cadre ou imposte avec faux ouvrants) : mets la répartition principale dans carH/carL et décris le reste dans "notes".
+- Fermetures (espagnolette, crémone, serrure), type de pose, allège, appui, état, contraintes : dans "notes", phrase courte.
+- Types de pose (vocabulaire) : dépose totale ; rénovation avec conservation des dormants existants ; pose en applique sans tapée ; pose en applique avec tapée (= avec rattrapage de doublage, c'est la même chose) ; pose en feuillure ; pose en embrasure ; pose en tunnel.
+- Erreurs fréquentes de la reconnaissance vocale : "A Florente", "à Florente", "affleurente" = affleurante ; "impression blanche" = pré-peinture blanche ; "pause" = pose ; "des pauses totales" = dépose totale ; "fure", "feur" = feuillure ; "taper" = tapée ; "ventail" = vantail ; "lance de panier" = anse de panier.
 - Vocabulaire : OF1/OF2/OF3 = fenêtre 1/2/3 vantaux, PF = porte-fenêtre. "Cote hors-tout", "cote tableau", "dos de dormant". Carreaux TOUJOURS PAR VANTAIL : "H4 L2" ou "4 en hauteur 2 en largeur" → carH 4, carL 2. "Cintré" sans précision = Surbaissé. "Raymond" = crémone ; "Gibro" = Bros. "Bois et Halles" = Boizéal (gamme Essentielle = recouvrement). Fixe latéral = faux ouvrant. VP = vantail principal.
 - Hauteur de soubassement (soubH) = du bas de la menuiserie (dessous de la pièce d'appui ou du seuil alu du dormant) jusqu'au dessus de la traverse intermédiaire, là où commence le clair de vitrage. Si une hauteur de soubassement est dite : soubassement = true.
 - Si la largeur et la hauteur ont des références différentes, garde-les séparées.
 - Tout ce qui ne rentre pas dans une case va dans "notes" (phrase courte).
 - Si une valeur est douteuse (bruit, chiffre incohérent), mets-la quand même si elle est probable ET explique dans "doutes".
-Réponds UNIQUEMENT par un objet JSON : {"champs": {"chemin": valeur, ...}, "doutes": ["..."]}. Les chemins et valeurs autorisés sont fournis. Pour les listes, utilise exactement une des valeurs proposées.`;
+Des photos de l'écran du télémètre de Térence peuvent être jointes : lis chaque valeur affichée (convertis en mm) et compare-la aux cotes dictées. Ne remplis pas une cote avec le télémètre seul : signale-le dans "doutes".
+Réponds UNIQUEMENT par un objet JSON : {"champs": {"chemin": valeur, ...}, "telemetre": ["2,154 m → 2154 mm : correspond à la largeur dictée", ...], "doutes": ["..."]}. Les chemins et valeurs autorisés sont fournis. Pour les listes, utilise exactement une des valeurs proposées.`;
 async function remplirIA(k){
   const c = k === 'd' ? D : O; await sauverMaintenant();
-  if (!c.dictee || !c.dictee.trim()) return toast('Dictée vide');
-  const zone = $('#propIA'); zone.innerHTML = '<p class="muted">L’IA lit la dictée…</p>';
+  const teles = k === 'o' ? MEDIAS.filter(m => m.ouvertureId === O.id && m.kind === 'photo' && m.telemetre) : [];
+  if ((!c.dictee || !c.dictee.trim()) && !teles.length) return toast('Dictée vide');
+  const zone = $('#propIA'); if (zone) zone.innerHTML = '<p class="muted">L’IA lit la dictée…</p>';
   const schema = k === 'd' ? SCHEMA_D : SCHEMA_O;
   const actuel = {}; Object.keys(schema).forEach(p => { const v = getP(c, p); if (v !== '' && v != null && !(Array.isArray(v)&&!v.length)) actuel[p] = v; });
   const contexte = k === 'o' ? `Critères généraux du dossier (ne pas recopier dans l'ouverture sauf si la dictée dit que cette ouverture est différente) : gamme ${D.gamme||'?'}, essence ${D.essence||'?'}, finition ${D.finition||'?'}.` : '';
   const msg = `Chemins autorisés et valeurs possibles :\n${JSON.stringify(schema, null, 1)}\n\nValeurs déjà saisies (ne les change que si la dictée les corrige) :\n${JSON.stringify(actuel)}\n\n${contexte}\n\nDictée :\n"""${c.dictee}"""`;
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', { method:'POST', headers:{'content-type':'application/json','x-api-key':REG.cleIA,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body: JSON.stringify({ model: REG.modeleIA, max_tokens: 1500, system: SYSTEME, messages:[{role:'user', content: msg}] }) });
+      body: JSON.stringify({ model: REG.modeleIA, max_tokens: 1500, system: SYSTEME, messages:[{role:'user', content: [
+        ...(await Promise.all(teles.slice(0,4).map(async m => ({type:'image', source:{type:'base64', media_type:'image/jpeg', data: await imgB64(m.blob)}})))),
+        {type:'text', text: msg + (teles.length ? `\n\n${Math.min(teles.length,4)} photo(s) de l'écran du télémètre jointe(s).` : '')} ]}] }) });
     const j = await r.json();
     if (!r.ok) throw new Error(j.error?.message || ('HTTP ' + r.status));
     const txt = (j.content||[]).map(x=>x.text||'').join('');
@@ -805,32 +879,44 @@ async function remplirIA(k){
     const res = JSON.parse(m[0]); proposerIA(k, res);
   } catch (e) { zone.innerHTML = `<p class="alertes"><li>IA : ${esc(e.message)}. La dictée est gardée.</li></p>`; }
 }
-function proposerIA(k, res){
-  const c = k === 'd' ? D : O; const zone = $('#propIA');
-  const ch = res.champs || {}; const lignes = [];
-  Object.entries(ch).forEach(([p, v]) => {
-    let nv = v; if (typeof nv === 'number') nv = String(nv);
-    if (p === 'notes') { if (!nv) return; nv = (c.notes ? c.notes + '\n' : '') + nv; }
-    const av = getP(c, p);
-    if (JSON.stringify(av) === JSON.stringify(nv)) return;
-    lignes.push({p, nv, av});
-  });
-  if (!lignes.length) { zone.innerHTML = '<p class="muted">Rien de nouveau à remplir.</p>' + doutesHTML(res); return; }
-  const nom = p => ({L:'Largeur',H:'Hauteur',Lref:'Largeur en',Href:'Hauteur en',carH:'Carreaux H',carL:'Carreaux L','cintre.fleche':'Flèche','cintre.flecheRef':'Flèche en','cintre.piedDroit':'Pied droit','cintre.piedDroitRef':'Pied droit en','cintre.type':'Cintre','criteres.gamme':'Gamme (ouverture)','criteres.essence':'Essence (ouverture)','criteres.finition':'Finition (ouverture)','criteres.vitrage':'Vitrage (ouverture)',soubH:'Hauteur de soubassement',bas:'Bas du dormant',type:'Type',piece:'Pièce',repere:'Repère',notes:'Remarques',fixes:'Fixe latéral',imposte:'Imposte',forme:'Forme',sens:'Sens',grandJour:'Grand jour',soubassement:'Soubassement',client:'Client',adresse:'Adresse',tel:'Téléphone',email:'E-mail',numero:'N° dossier',nature:'Nature',gamme:'Gamme',essence:'Essence',finition:'Finition',teinte:'Teinte',vitrage:'Vitrage',pose:'Pose',depose:'Dépose'}[p] || p);
-  zone.innerHTML = `<div class="prop"><b>Proposition de l’IA — décochez ce qui est faux</b>
-    ${lignes.map((l,i) => `<label><input type="checkbox" data-pi="${i}" checked><span><b>${esc(nom(l.p))}</b> : ${esc(Array.isArray(l.nv)?l.nv.join(', '):l.nv)}${l.av&&l.p!=='notes'&&!(Array.isArray(l.av)&&!l.av.length)?` <small class="muted">(avant : ${esc(Array.isArray(l.av)?l.av.join(', '):l.av)})</small>`:''}</span></label>`).join('')}
+async function imgB64(blob, max=1280){
+  const bmp = await createImageBitmap(blob); const r = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const cv = document.createElement('canvas'); cv.width = Math.round(bmp.width*r); cv.height = Math.round(bmp.height*r);
+  cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
+  const b = await new Promise(res => cv.toBlob(res, 'image/jpeg', 0.85)); const u = new Uint8Array(await b.arrayBuffer());
+  let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000)); return btoa(s);
+}
+const NOMS = p => ({L:'Largeur',H:'Hauteur',Lref:'Largeur en',Href:'Hauteur en',carH:'Carreaux H',carL:'Carreaux L','cintre.fleche':'Flèche','cintre.flecheRef':'Flèche en','cintre.piedDroit':'Pied droit','cintre.piedDroitRef':'Pied droit en','cintre.type':'Cintre','criteres.gamme':'Gamme (ouverture)','criteres.essence':'Essence (ouverture)','criteres.finition':'Finition (ouverture)','criteres.vitrage':'Vitrage (ouverture)',soubH:'Hauteur de soubassement',bas:'Bas du dormant',type:'Type',piece:'Pièce',repere:'Repère',notes:'Notes',fixes:'Fixe latéral',imposte:'Imposte',forme:'Forme',sens:'Sens',grandJour:'Grand jour',soubassement:'Soubassement',client:'Client',adresse:'Adresse',tel:'Téléphone',email:'E-mail',numero:'N° dossier',nature:'Nature',gamme:'Gamme',essence:'Essence',finition:'Finition',teinte:'Teinte',vitrage:'Vitrage',pose:'Pose',depose:'Dépose'}[p] || p);
+/* L'IA remplit directement (cases en orange) ; « Annuler » remet la fiche comme avant */
+async function proposerIA(k, res){
+  const c = k === 'd' ? D : O;
+  const avant = JSON.parse(JSON.stringify(c));
+  const ch = res.champs || {}; const faits = [];
+  for (const [p, v0] of Object.entries(ch)) {
+    let v = v0; if (typeof v === 'number') v = String(v);
+    if (['imposte','grandJour','soubassement'].includes(p)) v = v === true || v === 'true' || v === 'oui';
+    if (p === 'notes') { if (!v) continue; if ((c.notes||'').includes(v)) continue; v = (c.notes ? c.notes + '\n' : '') + v; }
+    if (JSON.stringify(getP(c, p)) === JSON.stringify(v)) continue;
+    setP(c, p, v); faits.push(p);
+    if (p !== 'notes') c.iaChamps = [...new Set([...(c.iaChamps||[]), p])];
+    if (p.startsWith('criteres.') && c.criteres) c.criteres.idem = false;
+  }
+  if (c === O) {
+    if ((faits.includes('carH') || faits.includes('carL')) && !faits.includes('grandJour')) c.grandJour = false;
+    if ((c.carH || c.carL) && !(c.carH && c.carL)) { const autre = c.carH ? 'carL' : 'carH'; c[autre] = '1'; c.iaChamps = [...new Set([...(c.iaChamps||[]), autre])]; }
+    if (c.grandJour) { c.carH = ''; c.carL = ''; }
+    if (faits.length && O.statut === 'validée') O.statut = 'modifiée';
+  }
+  await sauverMaintenant(); rafraichir();
+  const zone = $('#propIA'); if (!zone) return;
+  const val = p => { const v = getP(c, p); return Array.isArray(v) ? v.join(', ') : v === true ? 'oui' : v === false ? 'non' : v; };
+  zone.innerHTML = `<div class="prop"><b>${faits.length ? `L’IA a rempli ${faits.length} case(s) — vérifiez l’orange` : 'Rien de nouveau à remplir'}</b>
+    ${faits.filter(p=>p!=='notes').map(p => `<div>• ${esc(NOMS(p))} : <b>${esc(val(p))}</b></div>`).join('')}${faits.includes('notes') ? '<div>• Notes complétées</div>' : ''}
+    ${(res.telemetre||[]).length ? `<div style="margin-top:6px"><b>📏 Télémètre</b>${res.telemetre.map(t => `<div>• ${esc(t)}</div>`).join('')}</div>` : ''}
     ${doutesHTML(res)}
-    <div class="barre" style="margin-top:8px"><button class="btn ia" id="appIA">Appliquer</button><button class="btn sec" id="annIA">Annuler</button></div></div>`;
-  $('#annIA').onclick = () => zone.innerHTML = '';
-  $('#appIA').onclick = async () => {
-    zone.querySelectorAll('[data-pi]').forEach(cb => { if (!cb.checked) return; const l = lignes[+cb.dataset.pi];
-      let v = l.nv; if (['imposte','grandJour','soubassement'].includes(l.p)) v = v === true || v === 'true' || v === 'oui';
-      setP(c, l.p, v); if (l.p !== 'notes') c.iaChamps = [...new Set([...(c.iaChamps||[]), l.p])];
-      if (l.p.startsWith('criteres.') && c.criteres) c.criteres.idem = false; });
-    if (c === O && (c.carH || c.carL) && !(c.carH && c.carL)) { const autre = c.carH ? 'carL' : 'carH'; c[autre] = '1'; c.iaChamps = [...new Set([...(c.iaChamps||[]), autre])]; }
-    if (c === O && O.statut === 'validée') O.statut = 'modifiée';
-    await sauverMaintenant(); toast('Cases remplies : vérifiez les cases orange'); rafraichir();
-  };
+    ${faits.length ? '<button class="btn sec plein" id="annIA" style="margin-top:8px">Annuler ces changements</button>' : ''}</div>`;
+  if ($('#annIA')) $('#annIA').onclick = async () => { Object.keys(c).forEach(x => delete c[x]); Object.assign(c, avant); await sauverMaintenant(); rafraichir(); toast('Changements annulés'); };
+  zone.scrollIntoView({block:'nearest'});
 }
 const doutesHTML = r => (r.doutes && r.doutes.length) ? `<ul class="alertes" style="margin-top:8px">${r.doutes.map(d=>`<li class="info">❓ ${esc(d)}</li>`).join('')}</ul>` : '';
 
@@ -839,11 +925,11 @@ function nomMedia(m, i){
   const ext = (m.mime.split('/')[1]||'bin').split(';')[0].replace('jpeg','jpg').replace('quicktime','mov');
   const o = OUVS.find(x => x.id === m.ouvertureId);
   const pre = o ? `O${String(o.num).padStart(2,'0')}` : 'DOSSIER';
-  return `${pre}_${m.kind}_${String(i+1).padStart(2,'0')}${m.transcrire&&m.kind!=='photo'?'_A-TRANSCRIRE':''}.${ext}`;
+  return `${pre}_${m.telemetre?'telemetre':m.kind==='audio'?'dictee':m.kind}_${String(i+1).padStart(2,'0')}${m.transcrire&&m.kind!=='photo'?'_A-TRANSCRIRE':''}.${ext}`;
 }
 function construireExport(){
   const noms = new Map(); MEDIAS.forEach((m,i) => noms.set(m.id, nomMedia(m,i)));
-  const med = m => ({ fichier:'medias/'+noms.get(m.id), type:m.kind, aTranscrire: m.kind==='photo' ? false : !!m.transcrire, aAnalyser: m.kind==='photo', legende:m.note||'', date:m.date });
+  const med = m => ({ fichier:'medias/'+noms.get(m.id), type:m.kind, aTranscrire: m.kind==='photo' ? false : !!m.transcrire, aAnalyser: m.kind==='photo', ecranTelemetre: !!m.telemetre, legende:m.note||'', date:m.date });
   const json = { format:FORMAT, app:'HB Relevé '+VERSION, exporte:new Date().toISOString(),
     dossier: Object.fromEntries(Object.entries(D).filter(([k]) => !['envois'].includes(k))),
     mediasDossier: MEDIAS.filter(m=>!m.ouvertureId).map(med),
@@ -852,6 +938,7 @@ function construireExport(){
   L.push(`# RELEVÉ — ${D.client||'(sans nom)'}${D.test?' — TEST':''}`, '', `- Date du RDV : ${D.dateRdv||'?'} · N° : ${D.numero||'—'}`, `- Adresse : ${D.adresse||'—'} · Tél : ${D.tel||'—'} · Mail : ${D.email||'—'}`,
     `- Nature : ${(D.nature||[]).join(', ')||'—'}`, `- Gamme : ${D.gamme||'—'} · Essence : ${D.essence||'—'} · Finition : ${D.finition||'—'} · Teinte : ${D.teinte||'—'}`,
     `- Vitrage : ${D.vitrage||'—'} · ${D.pose||'—'} · Dépose : ${D.depose||'—'}`);
+  if (D.geo) L.push(`- Localisation : ${D.geo.lat.toFixed(5)}, ${D.geo.lon.toFixed(5)} (± ${D.geo.precision} m) — ${lienMaps(D.geo)}`);
   if (D.notes) L.push(`- Remarques : ${D.notes}`); if (D.dictee) L.push('', '> Dictée dossier : ' + D.dictee.replace(/\n/g,' '));
   if (D.iaChamps?.length) L.push(`- ⚠ Cases dossier remplies par l’IA non vérifiées : ${D.iaChamps.join(', ')}`);
   OUVS.forEach(o => {
