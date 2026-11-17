@@ -94,7 +94,13 @@ details summary{cursor:pointer;font-weight:600;color:var(--bois2);padding:6px 0}
 .aide{color:var(--gris);font-size:13px;margin:6px 0 0}
 /* appareil photo intégré */
 #cam{position:fixed;inset:0;z-index:50;background:#000;display:flex;flex-direction:column}
-#cam video{flex:1;width:100%;object-fit:cover;min-height:0}
+#cam video{flex:1;width:100%;object-fit:contain;min-height:0;background:#000;touch-action:none}
+#cam .zoom{position:absolute;left:0;right:0;bottom:150px;display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 20px}
+#cam .zoom .presets{display:flex;gap:10px}
+#cam .zoom .presets button{min-width:48px;height:48px;border-radius:24px;border:0;background:rgba(0,0,0,.55);color:#fff;font:inherit;font-weight:700;font-size:15px}
+#cam .zoom .presets button.on{background:#fff;color:#000}
+#cam .zoom input[type=range]{width:100%;max-width:420px;accent-color:#fff;border:0;background:transparent;padding:0}
+#cam .lens{width:56px;height:56px;border-radius:50%;border:2px solid #fff;background:rgba(255,255,255,.12);color:#fff;font-size:22px}
 #cam .haut{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:12px;padding-top:max(12px,env(safe-area-inset-top));color:#fff;background:linear-gradient(rgba(0,0,0,.55),transparent)}
 #cam .haut button{background:rgba(0,0,0,.45);color:#fff;border:0;border-radius:20px;padding:10px 16px;font:inherit;font-weight:600}
 #cam .bas{display:flex;justify-content:space-around;align-items:center;padding:18px 10px;padding-bottom:max(18px,env(safe-area-inset-bottom));background:#000}
@@ -123,7 +129,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--bois2);padding:6px 0}
    HB Relevé — Héritage Bois — relevé de chantier hors ligne
    Version 0.1 (17/11/2026). Données stockées sur le téléphone (IndexedDB).
    ===================================================================== */
-const VERSION = '0.4';
+const VERSION = '0.5';
 const FORMAT = 'hb-releve-1';
 
 /* ---------- Listes (vocabulaire Térence, Synthèse § 2) ---------- */
@@ -563,31 +569,94 @@ async function enregistrerMedia(blob, kind, nom){
   const m = { id:uid(), dossierId:D.id, ouvertureId:mediaCible, kind, mime:blob.type || (kind==='photo'?'image/jpeg':'video/webm'), blob, nom, date:new Date().toISOString(), transcrire: kind==='audio', note:'', envoye:false };
   await dbPut('medias', m); MEDIAS.push(m); return m;
 }
-/* Appareil photo intégré : s'ouvre directement, photo et vidéo dans le même écran */
+/* Appareil photo intégré : s'ouvre directement, focale 1 par défaut, zoom réglable, choix de l'objectif */
 let CAM = null;
+const gUM = c => navigator.mediaDevices.getUserMedia(c);
+async function fluxCamera(deviceId){
+  const base = deviceId ? { deviceId:{exact:deviceId} } : { facingMode:{ideal:'environment'} };
+  // 4:3 = plein capteur (le 16:9 recadre et « zoome ») ; zoom:true demande le contrôle du zoom
+  const v = Object.assign({}, base, { width:{ideal:1920}, height:{ideal:1440}, aspectRatio:{ideal:4/3}, zoom:true });
+  const essais = [ {video:v, audio:true}, {video:v}, {video:Object.assign({}, base, {width:{ideal:1920}, height:{ideal:1440}}), audio:true}, {video:base} ];
+  let err; for (const c of essais) { try { return await gUM(c); } catch (e) { err = e; if (e.name === 'NotAllowedError') break; } }
+  throw err;
+}
+async function camerasArriere(){
+  try { const ds = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+    const arr = ds.filter(d => /back|arri[eè]re|rear|environment/i.test(d.label)); return arr.length ? arr : ds; } catch(_) { return []; }
+}
 async function ouvrirCamera(ouvertureId){
   mediaCible = ouvertureId;
   const repli = () => { $('#capture').setAttribute('accept','image/*'); $('#capture').value=''; $('#capture').click(); };
   if (!navigator.mediaDevices?.getUserMedia) return repli();
   let stream;
-  const video = { facingMode:{ideal:'environment'}, width:{ideal:1920}, height:{ideal:1080} };
-  try { stream = await navigator.mediaDevices.getUserMedia({ video, audio:true }); }
-  catch (e) { try { stream = await navigator.mediaDevices.getUserMedia({ video }); } catch (e2) { toast('Appareil photo refusé : autorisez-le dans Chrome'); return repli(); } }
+  try { stream = await fluxCamera(lsGet('hb-cam-device', '') || null); }
+  catch (e) { try { lsSet('hb-cam-device',''); stream = await fluxCamera(null); } catch (e2) { toast('Appareil photo refusé : autorisez-le dans Chrome'); return repli(); } }
   const el = document.createElement('div'); el.id = 'cam';
   el.innerHTML = `<video autoplay playsinline muted></video><div class="flash"></div>
     <div class="haut"><button id="camFermer">✕ Fermer</button><span id="camNb"></span></div>
+    <div class="zoom" hidden><div class="presets"></div><input type="range" id="camZoom"></div>
     <div class="bas"><div class="lib"><button class="rec" id="camRec" aria-label="Vidéo"></button><br>Vidéo</div>
       <div class="lib"><button class="declic" id="camPhoto" aria-label="Photo"></button><br>Photo</div>
-      <div class="lib" style="width:70px"></div></div>`;
+      <div class="lib"><button class="lens" id="camLens" aria-label="Objectif" hidden>⟳</button><br><span id="camLensTxt"></span></div></div>`;
   document.body.appendChild(el);
-  const v = el.querySelector('video'); v.srcObject = stream;
-  CAM = { el, stream, n:0, rec:null, chunks:[], t0:0, timer:null };
+  const v = el.querySelector('video');
+  CAM = { el, stream, n:0, rec:null, chunks:[], t0:0, timer:null, zoom:null, backs:[] };
   const nb = () => el.querySelector('#camNb').textContent = CAM.n ? `${CAM.n} enregistré(s)` : '';
+  const track = () => CAM.stream.getVideoTracks()[0];
+
+  async function regler(z){
+    if (!CAM.zoom) return;
+    const {min, max, step} = CAM.zoom; z = Math.min(max, Math.max(min, Math.round(z/(step||0.1))*(step||0.1)));
+    try { await track().applyConstraints({advanced:[{zoom:z}]}); } catch(_) {}
+    CAM.z = z; el.querySelector('#camZoom').value = z;
+    el.querySelectorAll('.presets button').forEach(b => b.classList.toggle('on', Math.abs(+b.dataset.z - z) < 0.05));
+  }
+  async function brancherFlux(){
+    v.srcObject = CAM.stream;
+    const t = track(); const caps = t.getCapabilities ? t.getCapabilities() : {};
+    const zb = el.querySelector('.zoom');
+    if (caps.zoom && caps.zoom.max > caps.zoom.min) {
+      CAM.zoom = caps.zoom; const r = el.querySelector('#camZoom');
+      r.min = caps.zoom.min; r.max = caps.zoom.max; r.step = caps.zoom.step || 0.1;
+      const pres = [...new Set([caps.zoom.min < 0.95 ? Math.round(caps.zoom.min*10)/10 : null, 1, caps.zoom.max >= 2 ? 2 : null, caps.zoom.max >= 5 ? 5 : null].filter(x => x != null && x >= caps.zoom.min && x <= caps.zoom.max))];
+      zb.querySelector('.presets').innerHTML = pres.map(z => `<button data-z="${z}">${String(z).replace('.',',')}×</button>`).join('');
+      zb.querySelectorAll('.presets button').forEach(b => b.onclick = () => regler(+b.dataset.z));
+      r.oninput = () => regler(+r.value);
+      zb.hidden = false;
+      await regler(Math.min(caps.zoom.max, Math.max(caps.zoom.min, 1)));   // toujours focale 1 à l'ouverture
+    } else { CAM.zoom = null; zb.hidden = true; }
+    CAM.backs = await camerasArriere();
+    const lb = el.querySelector('#camLens');
+    if (CAM.backs.length > 1) {
+      lb.hidden = false;
+      const id = t.getSettings ? t.getSettings().deviceId : '';
+      const i = Math.max(0, CAM.backs.findIndex(d => d.deviceId === id));
+      el.querySelector('#camLensTxt').textContent = `Objectif ${i+1}/${CAM.backs.length}`;
+    }
+  }
+  await brancherFlux();
+
+  // pincer pour zoomer
+  let pinch = null;
+  v.addEventListener('touchstart', e => { if (e.touches.length === 2 && CAM.zoom) { const [a,b] = e.touches; pinch = { d: Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY), z: CAM.z || 1 }; } }, {passive:true});
+  v.addEventListener('touchmove', e => { if (pinch && e.touches.length === 2) { const [a,b] = e.touches; const d = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY); regler(pinch.z * d / pinch.d); } }, {passive:true});
+  v.addEventListener('touchend', () => pinch = null, {passive:true});
+
+  el.querySelector('#camLens').onclick = async () => {
+    if (CAM.rec) return toast('Arrêtez la vidéo avant de changer d’objectif');
+    const id = track().getSettings ? track().getSettings().deviceId : '';
+    const i = CAM.backs.findIndex(d => d.deviceId === id);
+    const suiv = CAM.backs[(i + 1) % CAM.backs.length];
+    try {
+      CAM.stream.getTracks().forEach(t => t.stop());
+      CAM.stream = await fluxCamera(suiv.deviceId); lsSet('hb-cam-device', suiv.deviceId); await brancherFlux();
+    } catch (e) { toast('Objectif indisponible'); lsSet('hb-cam-device',''); CAM.stream = await fluxCamera(null); await brancherFlux(); }
+  };
   el.querySelector('#camFermer').onclick = () => fermerCamera(true);
   el.querySelector('#camPhoto').onclick = async () => {
     try {
-      const track = stream.getVideoTracks()[0]; let blob = null;
-      if ('ImageCapture' in window) { try { blob = await new ImageCapture(track).takePhoto(); } catch(_){} }
+      let blob = null;
+      if ('ImageCapture' in window) { try { blob = await new ImageCapture(track()).takePhoto(); } catch(_){} }
       if (!blob) { const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v,0,0); blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92)); }
       const f = el.querySelector('.flash'); f.style.opacity = .9; setTimeout(() => f.style.opacity = 0, 120);
       await enregistrerMedia(blob, 'photo', 'photo'); CAM.n++; nb();
@@ -598,7 +667,7 @@ async function ouvrirCamera(ouvertureId){
     if (CAM.rec) { CAM.rec.stop(); return; }
     const types = ['video/mp4','video/webm;codecs=vp9,opus','video/webm'];
     const mt = types.find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || '';
-    CAM.chunks = []; CAM.rec = new MediaRecorder(stream, mt ? {mimeType: mt} : undefined);
+    CAM.chunks = []; CAM.rec = new MediaRecorder(CAM.stream, mt ? {mimeType: mt} : undefined);
     CAM.rec.ondataavailable = e => e.data.size && CAM.chunks.push(e.data);
     CAM.rec.onstop = async () => {
       clearInterval(CAM.timer); el.querySelector('.chrono')?.remove(); b.classList.remove('on');
