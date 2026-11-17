@@ -65,7 +65,18 @@ input.cote{font-size:28px;font-weight:700;text-align:center;letter-spacing:.03em
 .media label{display:flex;gap:6px;align-items:center}
 .media input[type=checkbox]{width:22px;height:22px}
 .fab{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom));background:var(--fond);border-top:1px solid var(--ligne);box-shadow:0 -4px 12px rgba(0,0,0,.06);display:flex;gap:8px;max-width:760px;margin:0 auto}
-.fab .btn{flex:1}
+.fab .btn{flex:1;padding:12px 8px;font-size:15px}
+details.pli{padding:0}
+details.pli>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px;cursor:pointer}
+details.pli>summary::-webkit-details-marker{display:none}
+details.pli>summary .tt{flex:1;min-width:0}
+details.pli>summary b{display:block;font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--bois2)}
+details.pli>summary small{display:block;color:var(--gris);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+details.pli>summary::after{content:'▾';font-size:20px;color:var(--bois2);transition:transform .15s}
+details.pli:not([open])>summary::after{transform:rotate(-90deg)}
+details.pli>.contenu{padding:0 14px 14px;border-top:1px solid #efe6da}
+details.pli .carte{border:0;padding:0;margin:0;box-shadow:none}
+details.pli .carte h2{display:none}
 .rec{animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.55}}
 .muted{color:var(--gris);font-size:14px}
@@ -112,7 +123,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--bois2);padding:6px 0}
    HB Relevé — Héritage Bois — relevé de chantier hors ligne
    Version 0.1 (17/11/2026). Données stockées sur le téléphone (IndexedDB).
    ===================================================================== */
-const VERSION = '0.3';
+const VERSION = '0.4';
 const FORMAT = 'hb-releve-1';
 
 /* ---------- Listes (vocabulaire Térence, Synthèse § 2) ---------- */
@@ -336,40 +347,21 @@ async function vueListe(){
 }
 
 /* =================== VUE : dossier =================== */
+const PLIS = {};
+function pli(id, titre, resume, contenu){
+  const ouvert = PLIS[D.id].has(id);
+  return `<details class="carte pli" data-pli="${id}"${ouvert?' open':''}><summary><div class="tt"><b>${titre}</b><small>${esc(resume)}</small></div></summary><div class="contenu">${contenu}</div></details>`;
+}
 function vueDossier(){
   O = null;
   $('#titre').textContent = D.client || 'Nouveau dossier';
   const md = MEDIAS.filter(m => !m.ouvertureId);
+  if (!PLIS[D.id]) PLIS[D.id] = new Set((!D.client && !OUVS.length) ? ['client','criteres'] : []);
+  const resClient = [D.client, D.adresse, D.dateRdv && D.dateRdv.split('-').reverse().join('/'), D.test?'TEST':''].filter(Boolean).join(' · ') || 'à renseigner';
+  const resCrit = [D.gamme, D.essence, D.finition, D.vitrage, D.pose].filter(Boolean).join(' · ') || 'à renseigner';
+  const resDict = D.dictee ? D.dictee.slice(0,60) + (D.dictee.length>60?'…':'') : 'vide';
+  const resMed = md.length ? `${md.filter(m=>m.kind==='photo').length} photo(s) · ${md.filter(m=>m.kind==='video').length} vidéo(s) · ${md.filter(m=>m.kind==='audio').length} mémo(s)` : 'aucun';
   $('#app').innerHTML = `
-  <div data-cible="d">
-  <div class="carte">
-    <h2>Client</h2>
-    <label class="l">Nom du client</label>${champ('client', D, {ph:'ex. DIAZ'})}
-    <label class="l">Adresse du chantier</label>${champ('adresse', D)}
-    <div class="ligne2"><div><label class="l">Téléphone</label>${champ('tel', D, {type:'tel'})}</div>
-    <div><label class="l">Date du RDV</label>${champ('dateRdv', D, {type:'date'})}</div></div>
-    <div class="ligne2"><div><label class="l">E-mail</label>${champ('email', D, {type:'email'})}</div>
-    <div><label class="l">N° dossier HB</label>${champ('numero', D, {ph:'HB-…'})}</div></div>
-    <label class="coche"><input type="checkbox" id="estTest" ${D.test?'checked':''}> Dossier de TEST</label>
-  </div>
-  <div class="carte">
-    <h2>Critères généraux (toutes les ouvertures)</h2>
-    <label class="l">Nature des travaux</label>${chips('nature', NATURES, D, true)}
-    <label class="l">Gamme</label>${chips('gamme', GAMMES, D)}${champ('gamme', D, {ph:'ou saisir / dicter une autre gamme'})}
-    <label class="l">Essence</label>${chips('essence', ESSENCES, D)}
-    <label class="l">Finition</label>${chips('finition', FINITIONS, D, false, 'g2')}
-    <label class="l">Teinte</label>${champ('teinte', D)}
-    <label class="l">Vitrage</label>${chips('vitrage', VITRAGES, D)}
-    <label class="l">Pose</label>${chips('pose', POSES, D, false, 'g2')}
-    <label class="l">Dépose des anciennes menuiseries</label>${chips('depose', ['Oui','Non','Par le client / maçon'], D)}
-    <label class="l">Remarques générales</label>${champ('notes', D, {zone:1})}
-  </div>
-  ${blocDictee('d')}
-  <div class="carte">
-    <h2>Photos, vidéos, mémos du dossier</h2>
-    ${blocMedias(md)}
-  </div>
-  </div>
   <div class="carte">
     <h2>Ouvertures (${OUVS.length})</h2>
     ${OUVS.map(o => {
@@ -378,21 +370,51 @@ function vueDossier(){
       const nm = MEDIAS.filter(m => m.ouvertureId === o.id).length;
       return `<div class="item" data-o="${o.id}"><div class="t"><b>N°${o.num}${o.repere?' · '+esc(o.repere):''} — ${esc(o.type||'?')}${o.forme==='Cintrée'?' cintrée':''}</b>
       <small>${o.L||'?'} × ${o.H||'?'} ${o.Lref?esc(o.Lref.toLowerCase()):''}${o.piece?' · '+esc(o.piece):''}${nm?' · '+nm+' média(s)':''}${al?' · ⚠ '+al:''}</small></div>${st}</div>`;
-    }).join('') || '<p class="muted">Aucune ouverture.</p>'}
+    }).join('') || '<p class="muted">Aucune ouverture pour l’instant.</p>'}
+    <button class="btn plein" id="nvO" style="margin-top:6px">＋ Ajouter l’ouverture n°${(OUVS.at(-1)?.num||0)+1}</button>
+  </div>
+  <div data-cible="d">
+  ${pli('client', 'Client', resClient, `
+    <label class="l">Nom du client</label>${champ('client', D, {ph:'ex. DIAZ'})}
+    <label class="l">Adresse du chantier</label>${champ('adresse', D)}
+    <div class="ligne2"><div><label class="l">Téléphone</label>${champ('tel', D, {type:'tel'})}</div>
+    <div><label class="l">Date du RDV</label>${champ('dateRdv', D, {type:'date'})}</div></div>
+    <div class="ligne2"><div><label class="l">E-mail</label>${champ('email', D, {type:'email'})}</div>
+    <div><label class="l">N° dossier HB</label>${champ('numero', D, {ph:'HB-…'})}</div></div>
+    <label class="coche"><input type="checkbox" id="estTest" ${D.test?'checked':''}> Dossier de TEST</label>`)}
+  ${pli('criteres', 'Critères généraux', resCrit, `
+    <label class="l">Nature des travaux</label>${chips('nature', NATURES, D, true)}
+    <label class="l">Gamme</label>${chips('gamme', GAMMES, D)}${champ('gamme', D, {ph:'ou saisir / dicter une autre gamme'})}
+    <label class="l">Essence</label>${chips('essence', ESSENCES, D)}
+    <label class="l">Finition</label>${chips('finition', FINITIONS, D, false, 'g2')}
+    <label class="l">Teinte</label>${champ('teinte', D)}
+    <label class="l">Vitrage</label>${chips('vitrage', VITRAGES, D)}
+    <label class="l">Pose</label>${chips('pose', POSES, D, false, 'g2')}
+    <label class="l">Dépose des anciennes menuiseries</label>${chips('depose', ['Oui','Non','Par le client / maçon'], D)}
+    <label class="l">Remarques générales</label>${champ('notes', D, {zone:1})}`)}
+  ${pli('dictee', 'Dictée du dossier', resDict, blocDictee('d'))}
+  ${pli('medias', 'Photos, vidéos, mémos du dossier', resMed, blocMedias(md))}
   </div>
   <div class="barre" style="margin-bottom:12px">
     <button class="btn sec" id="archiver">${D.archive?'Désarchiver':'Archiver le dossier'}</button>
   </div>
   <div class="fab">
-    <button class="btn" id="nvO">＋ Ouverture n°${(OUVS.at(-1)?.num||0)+1}</button>
+    <button class="btn sec" id="terminer">✓ Terminer</button>
     <button class="btn bleu" id="envoyer">Envoyer ↑</button>
   </div>`;
+  document.querySelectorAll('details.pli').forEach(d => d.addEventListener('toggle', () => { d.open ? PLIS[D.id].add(d.dataset.pli) : PLIS[D.id].delete(d.dataset.pli); }));
   $('#estTest').onchange = e => { D.test = e.target.checked; sauver(); };
   document.querySelectorAll('[data-o]').forEach(x => x.onclick = () => aller('/o/'+x.dataset.o));
   $('#nvO').onclick = async () => { await sauverMaintenant(); const o = nouvelleOuverture(D.id, (OUVS.at(-1)?.num||0)+1); await dbPut('ouvertures', o); aller('/o/'+o.id); };
   $('#envoyer').onclick = async () => { await sauverMaintenant(); aller('/envoi/'+D.id); };
+  $('#terminer').onclick = terminer;
   $('#archiver').onclick = async () => { D.archive = !D.archive; await sauverMaintenant(); toast(D.archive?'Dossier archivé':'Dossier désarchivé'); aller('/'); };
   brancherMedias(null); brancherDictee('d');
+}
+async function terminer(){
+  await sauverMaintenant();
+  if (D) PLIS[D.id] = new Set();
+  toast('Enregistré ✓'); aller('/');
 }
 
 /* =================== VUE : ouverture =================== */
@@ -465,7 +487,8 @@ function vueOuverture(){
     </div>
   </div>
   <div class="fab">
-    <button class="btn ${O.statut==='validée'?'sec':'vert'}" id="valider">${O.statut==='validée'?'✓ Validée':'✓ Valider l’ouverture'}</button>
+    <button class="btn sec" id="terminer">Terminer</button>
+    <button class="btn ${O.statut==='validée'?'sec':'vert'}" id="valider">${O.statut==='validée'?'✓ Validée':'✓ Valider'}</button>
     <button class="btn" id="suivante">Suivante →</button>
   </div>`;
   majControles();
@@ -481,6 +504,7 @@ function vueOuverture(){
     if (err.length && !confirm(`Il reste ${err.length} point(s) à corriger :\n- ${err.map(x=>x[1]).join('\n- ')}\n\nValider quand même ?`)) return;
     O.statut = 'validée'; O.iaChamps = []; await sauverMaintenant(); toast('Ouverture validée'); const y=scrollY; vueOuverture(); scrollTo(0,y);
   };
+  $('#terminer').onclick = terminer;
   $('#suivante').onclick = async () => {
     await sauverMaintenant();
     const n = OUVS.find(o => o.num > O.num);
