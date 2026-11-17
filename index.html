@@ -16,20 +16,26 @@ header h1{font-size:18px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text
 header button{background:transparent;border:0;color:#fff;font-size:22px;padding:4px 8px;min-width:40px}
 #reseau{font-size:12px;padding:3px 8px;border-radius:10px;background:#3a2412}
 #reseau.on{background:#2e7d32}
-main{padding:12px;padding-bottom:110px;max-width:760px;margin:0 auto}
-.carte{background:var(--carte);border:1px solid var(--ligne);border-radius:12px;padding:12px;margin-bottom:12px}
-.carte h2{font-size:15px;text-transform:uppercase;letter-spacing:.04em;color:var(--bois2);margin:0 0 8px}
-label.l{display:block;font-size:13px;color:var(--gris);margin:10px 0 4px}
+main{padding:12px;padding-bottom:130px;max-width:760px;margin:0 auto}
+.carte{background:var(--carte);border:1px solid var(--ligne);border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.carte h2{font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--bois2);margin:0 0 6px;padding-bottom:8px;border-bottom:1px solid #efe6da}
+label.l{display:block;font-size:13px;font-weight:600;color:var(--gris);margin:14px 0 6px}
+.coche{display:flex;gap:10px;align-items:center;font-size:16px;margin:14px 0 4px;color:var(--txt)}
+.coche input{width:24px;height:24px;flex:none}
 input,textarea,select{width:100%;font:inherit;padding:10px;border:1px solid var(--ligne);border-radius:8px;background:#fff;color:var(--txt)}
 textarea{min-height:70px;resize:vertical}
 input.cote{font-size:28px;font-weight:700;text-align:center;letter-spacing:.03em;padding:8px}
 .ia-flag{border-color:var(--ia)!important;box-shadow:0 0 0 2px #f5c58a}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{border:1px solid var(--ligne);background:#fff;border-radius:20px;padding:9px 13px;font:inherit;font-size:15px;color:var(--txt)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips.g4{display:grid;grid-template-columns:repeat(4,1fr)}
+.chips.g3{display:grid;grid-template-columns:repeat(3,1fr)}
+.chips.g2{display:grid;grid-template-columns:repeat(2,1fr)}
+.chips.g4 .chip,.chips.g3 .chip,.chips.g2 .chip{padding:10px 4px;text-align:center}
+.chip{border:1px solid var(--ligne);background:#fff;border-radius:10px;padding:10px 13px;font:inherit;font-size:15px;color:var(--txt);min-height:44px;line-height:1.15}
 .chip.on{background:var(--bois);border-color:var(--bois);color:#fff}
 .chip.ia{border-color:var(--ia);box-shadow:0 0 0 2px #f5c58a}
 .ligne2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.ligne3{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center}
+.ligne3{display:grid;grid-template-columns:1fr;gap:4px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:13px 16px;font:inherit;font-weight:600;background:var(--bois);color:#fff;min-height:48px}
 .btn.sec{background:#efe6da;color:var(--bois)}
 .btn.vert{background:var(--ok)}
@@ -58,21 +64,35 @@ input.cote{font-size:28px;font-weight:700;text-align:center;letter-spacing:.03em
 .media .c{padding:6px 8px}
 .media label{display:flex;gap:6px;align-items:center}
 .media input[type=checkbox]{width:22px;height:22px}
-.fab{position:fixed;left:0;right:0;bottom:0;padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--fond) 30%);display:flex;gap:8px;max-width:760px;margin:0 auto}
+.fab{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom));background:var(--fond);border-top:1px solid var(--ligne);box-shadow:0 -4px 12px rgba(0,0,0,.06);display:flex;gap:8px;max-width:760px;margin:0 auto}
 .fab .btn{flex:1}
 .rec{animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.55}}
 .muted{color:var(--gris);font-size:14px}
-.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;z-index:20;font-size:15px;max-width:90%}
+.toast{position:fixed;left:50%;top:calc(64px + env(safe-area-inset-top));transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;z-index:40;font-size:15px;max-width:90%;text-align:center}
 details summary{cursor:pointer;font-weight:600;color:var(--bois2);padding:6px 0}
 .prop{border:1px solid var(--ia);border-radius:10px;padding:10px;background:#fffaf2;margin-top:10px}
 .prop label{display:flex;gap:8px;align-items:flex-start;padding:4px 0}
 .prop input{width:22px;height:22px;flex:none}
 .progress{height:10px;background:#eee;border-radius:6px;overflow:hidden}
 .progress div{height:100%;background:var(--bleu);width:0}
-.step{display:flex;align-items:center;gap:8px}
-.step button{width:48px;height:48px;font-size:24px;border-radius:10px;border:1px solid var(--ligne);background:#fff}
-.step input{text-align:center;font-size:22px;font-weight:700}
+.step{display:grid;grid-template-columns:110px 52px 1fr 52px;gap:8px;align-items:center;margin-top:8px}
+.step span{font-weight:600}
+.step button{width:52px;height:52px;font-size:26px;border-radius:10px;border:1px solid var(--ligne);background:#fff;color:var(--txt)}
+.step input{text-align:center;font-size:24px;font-weight:700;min-width:0;padding:8px}
+.aide{color:var(--gris);font-size:13px;margin:6px 0 0}
+/* appareil photo intégré */
+#cam{position:fixed;inset:0;z-index:50;background:#000;display:flex;flex-direction:column}
+#cam video{flex:1;width:100%;object-fit:cover;min-height:0}
+#cam .haut{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:12px;padding-top:max(12px,env(safe-area-inset-top));color:#fff;background:linear-gradient(rgba(0,0,0,.55),transparent)}
+#cam .haut button{background:rgba(0,0,0,.45);color:#fff;border:0;border-radius:20px;padding:10px 16px;font:inherit;font-weight:600}
+#cam .bas{display:flex;justify-content:space-around;align-items:center;padding:18px 10px;padding-bottom:max(18px,env(safe-area-inset-bottom));background:#000}
+#cam .declic{width:78px;height:78px;border-radius:50%;border:5px solid #fff;background:#fff;box-shadow:inset 0 0 0 4px #000}
+#cam .rec{width:64px;height:64px;border-radius:50%;border:4px solid #fff;background:#d32f2f;color:#fff;font-weight:700}
+#cam .rec.on{border-radius:14px;animation:pulse 1s infinite}
+#cam .lib{color:#fff;font-size:13px;text-align:center;width:70px}
+#cam .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .15s}
+#cam .chrono{position:absolute;top:70px;left:50%;transform:translateX(-50%);background:#d32f2f;color:#fff;padding:4px 12px;border-radius:12px;font-weight:700}
 </style>
 </head>
 <body>
@@ -92,7 +112,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--bois2);padding:6px 0}
    HB Relevé — Héritage Bois — relevé de chantier hors ligne
    Version 0.1 (17/11/2026). Données stockées sur le téléphone (IndexedDB).
    ===================================================================== */
-const VERSION = '0.2';
+const VERSION = '0.3';
 const FORMAT = 'hb-releve-1';
 
 /* ---------- Listes (vocabulaire Térence, Synthèse § 2) ---------- */
@@ -191,7 +211,7 @@ function controles(o){
     if (o.cintre.type === 'Plein cintre' && o.cintre.fleche && L && Math.abs(+o.cintre.fleche - L/2) > 30) a.push(['info','Plein cintre : flèche ≠ demi-largeur, vérifier']);
     if (o.cintre.fleche && H && +o.cintre.fleche >= H) a.push(['err','Flèche ≥ hauteur : impossible']);
   }
-  if (/^(OF|PF|Porte)/.test(t) && !o.grandJour && (!o.carH || !o.carL)) a.push(['info','Carreaux par vantail non renseignés (ou cocher Grand jour)']);
+  if (/^(OF|PF|Porte|Fixe)/.test(t) && !o.grandJour && !o.carH && !o.carL) a.push(['info','Carreaux par vantail non renseignés (ou cocher Grand jour)']);
   if (o.soubassement) {
     if (!o.soubH) a.push(['err','Soubassement : hauteur manquante']);
     else if (H && +o.soubH >= H) a.push(['err','Soubassement ≥ hauteur : impossible']);
@@ -210,7 +230,7 @@ function urlMedia(m){ if(!URLS.has(m.id)) URLS.set(m.id, URL.createObjectURL(m.b
 function aller(h){ location.hash = h; }
 window.addEventListener('hashchange', route);
 async function route(){
-  stopDictee(); stopMemo(true);
+  stopDictee(); stopMemo(true); fermerCamera(false);
   const h = location.hash.slice(1) || '/';
   const p = h.split('/').filter(Boolean);
   $('#retour').hidden = p.length === 0;
@@ -241,10 +261,10 @@ window.addEventListener('pagehide', sauverMaintenant);
 document.addEventListener('visibilitychange', () => { if (document.hidden) sauverMaintenant(); });
 
 /* ---------- Composants ---------- */
-function chips(path, options, cible, multi=false){
+function chips(path, options, cible, multi=false, grille=''){
   const v = getP(cible, path);
   const ia = (cible.iaChamps||[]).includes(path);
-  return `<div class="chips">${options.map(x => {
+  return `<div class="chips ${grille}">${options.map(x => {
     const on = multi ? (v||[]).includes(x) : v === x;
     return `<button class="chip${on?' on':''}${on&&ia?' ia':''}" data-chip="${esc(path)}" data-v="${esc(x)}" data-multi="${multi?1:0}">${esc(x)}</button>`;
   }).join('')}</div>`;
@@ -265,6 +285,7 @@ document.addEventListener('input', e => {
   if (el.inputMode === 'numeric') { v = v.replace(/[^0-9]/g,''); if (v !== el.value) el.value = v; }
   setP(c, p, v);
   c.iaChamps = (c.iaChamps||[]).filter(x => x !== p); el.classList.remove('ia-flag');
+  if (c === O && (p === 'carH' || p === 'carL') && v) { const autre = p === 'carH' ? 'carL' : 'carH'; if (!O[autre]) { O[autre] = '1'; const e2 = document.querySelector(`[data-f="${autre}"]`); if (e2) e2.value = '1'; } }
   if (c === O && O.statut === 'validée') { O.statut = 'modifiée'; }
   sauver();
   if (c === O && el.dataset.live) majControles();
@@ -329,17 +350,17 @@ function vueDossier(){
     <div><label class="l">Date du RDV</label>${champ('dateRdv', D, {type:'date'})}</div></div>
     <div class="ligne2"><div><label class="l">E-mail</label>${champ('email', D, {type:'email'})}</div>
     <div><label class="l">N° dossier HB</label>${champ('numero', D, {ph:'HB-…'})}</div></div>
-    <label class="l" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="estTest" style="width:22px;height:22px" ${D.test?'checked':''}> Dossier de TEST</label>
+    <label class="coche"><input type="checkbox" id="estTest" ${D.test?'checked':''}> Dossier de TEST</label>
   </div>
   <div class="carte">
     <h2>Critères généraux (toutes les ouvertures)</h2>
     <label class="l">Nature des travaux</label>${chips('nature', NATURES, D, true)}
     <label class="l">Gamme</label>${chips('gamme', GAMMES, D)}${champ('gamme', D, {ph:'ou saisir / dicter une autre gamme'})}
     <label class="l">Essence</label>${chips('essence', ESSENCES, D)}
-    <label class="l">Finition</label>${chips('finition', FINITIONS, D)}
+    <label class="l">Finition</label>${chips('finition', FINITIONS, D, false, 'g2')}
     <label class="l">Teinte</label>${champ('teinte', D)}
     <label class="l">Vitrage</label>${chips('vitrage', VITRAGES, D)}
-    <label class="l">Pose</label>${chips('pose', POSES, D)}
+    <label class="l">Pose</label>${chips('pose', POSES, D, false, 'g2')}
     <label class="l">Dépose des anciennes menuiseries</label>${chips('depose', ['Oui','Non','Par le client / maçon'], D)}
     <label class="l">Remarques générales</label>${champ('notes', D, {zone:1})}
   </div>
@@ -387,42 +408,42 @@ function vueOuverture(){
     <h2>Ouverture n°${O.num}</h2>
     <div class="ligne2"><div><label class="l">Repère</label>${champ('repere', O, {ph:'ex. OF-01'})}</div>
     <div><label class="l">Pièce / étage</label>${champ('piece', O, {ph:'ex. cuisine RDC'})}</div></div>
-    <label class="l">Type d’ouvrage</label>${chips('type', TYPES, O)}
-    ${/^(OF|PF)/.test(O.type)||O.type==='Fixe' ? `<label class="l">Fixe latéral</label>${chips('fixes', FIXES, O)}
-      <label class="l" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="imposte" style="width:22px;height:22px" ${O.imposte?'checked':''}> Imposte</label>` : ''}
-    <label class="l">Forme</label>${chips('forme', FORMES, O)}
+    <label class="l">Type d’ouvrage</label>${chips('type', TYPES, O, false, 'g4')}
+    ${/^(OF|PF)/.test(O.type)||O.type==='Fixe' ? `<label class="l">Fixe latéral</label>${chips('fixes', FIXES, O, false, 'g2')}
+      <label class="coche"><input type="checkbox" id="imposte" ${O.imposte?'checked':''}> Imposte</label>` : ''}
+    <label class="l">Forme</label>${chips('forme', FORMES, O, false, 'g2')}
   </div>
   <div class="carte">
     <h2>Cotes (mm)</h2>
     <label class="l">Largeur</label>${champ('L', O, {num:1, cote:1, ph:'largeur'}).replace('data-f','data-live="1" data-f')}
-    ${chips('Lref', REFS, O)}
+    ${chips('Lref', REFS, O, false, 'g3')}
     <label class="l">Hauteur</label>${champ('H', O, {num:1, cote:1, ph:'hauteur'}).replace('data-f','data-live="1" data-f')}
-    ${chips('Href', REFS, O)}
+    ${chips('Href', REFS, O, false, 'g3')}
     ${O.forme === 'Cintrée' ? `
-      <label class="l">Type de cintre</label>${chips('cintre.type', CINTRES, O)}
+      <label class="l">Type de cintre</label>${chips('cintre.type', CINTRES, O, false, 'g3')}
       <div class="ligne2"><div><label class="l">Flèche</label>${champ('cintre.fleche', O, {num:1, cote:1}).replace('data-f','data-live="1" data-f')}</div>
       <div><label class="l">Pied droit</label>${champ('cintre.piedDroit', O, {num:1, cote:1})}</div></div>
-      <label class="l">Flèche en</label>${chips('cintre.flecheRef', ['Tableau','Hors-tout'], O)}
-      <label class="l">Pied droit en</label>${chips('cintre.piedDroitRef', ['Tableau','Hors-tout'], O)}` : ''}
+      <label class="l">Flèche en</label>${chips('cintre.flecheRef', ['Tableau','Hors-tout'], O, false, 'g2')}
+      <label class="l">Pied droit en</label>${chips('cintre.piedDroitRef', ['Tableau','Hors-tout'], O, false, 'g2')}` : ''}
   </div>
   <div class="carte">
     <h2>Carreaux par vantail · sens</h2>
     ${/^(Volet)/.test(O.type) ? '<p class="muted">Volet : pas de carreaux.</p>' : `
-    <label class="l" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="grandJour" style="width:22px;height:22px" ${O.grandJour?'checked':''}> Grand jour (pas de petit bois)</label>
+    <label class="coche"><input type="checkbox" id="grandJour" ${O.grandJour?'checked':''}> Grand jour (pas de petit bois)</label>
     ${O.grandJour ? '' : `<div class="ligne3">
-      <div><label class="l">H (en hauteur)</label><div class="step"><button data-step="carH" data-d="-1">−</button>${champ('carH', O, {num:1})}<button data-step="carH" data-d="1">＋</button></div></div>
-      <div style="padding-top:28px;font-size:22px">×</div>
-      <div><label class="l">L (en largeur)</label><div class="step"><button data-step="carL" data-d="-1">−</button>${champ('carL', O, {num:1})}<button data-step="carL" data-d="1">＋</button></div></div>
+      <div class="step"><span>En hauteur</span><button data-step="carH" data-d="-1">−</button>${champ('carH', O, {num:1})}<button data-step="carH" data-d="1">＋</button></div>
+      <div class="step"><span>En largeur</span><button data-step="carL" data-d="-1">−</button>${champ('carL', O, {num:1})}<button data-step="carL" data-d="1">＋</button></div>
+      <p class="aide">Si vous ne remplissez qu’un sens, l’autre vaut 1.</p>
     </div>`}
-    <label class="l" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="soub" style="width:22px;height:22px" ${O.soubassement?'checked':''}> Soubassement (panneau)</label>
+    <label class="coche"><input type="checkbox" id="soub" ${O.soubassement?'checked':''}> Soubassement (panneau)</label>
     ${O.soubassement ? `<label class="l">Hauteur de soubassement (mm)</label>${champ('soubH', O, {num:1, cote:1, ph:'soubassement'}).replace('data-f','data-live="1" data-f')}
-      <p class="muted" style="margin:4px 0 0">Du bas de la menuiserie (dessous pièce d’appui ou seuil alu du dormant) au dessus de la traverse intermédiaire = début du clair de vitrage.</p>
-      <label class="l">Bas du dormant</label>${chips('bas', BAS, O)}` : ''}`}
-    ${nv === 1 ? `<label class="l">Sens (vue intérieure)</label>${chips('sens', SENS_1V, O)}` : nv >= 2 ? `<label class="l">Sens (vue intérieure)</label>${chips('sens', SENS_2V, O)}` : ''}
+      <p class="aide">Du bas de la menuiserie (dessous pièce d’appui ou seuil alu du dormant) au dessus de la traverse intermédiaire = début du clair de vitrage.</p>
+      <label class="l">Bas du dormant</label>${chips('bas', BAS, O, false, 'g2')}` : ''}`}
+    ${nv === 1 ? `<label class="l">Sens (vue intérieure)</label>${chips('sens', SENS_1V, O, false, 'g2')}` : nv >= 2 ? `<label class="l">Sens (vue intérieure)</label>${chips('sens', SENS_2V, O, false, 'g2')}` : ''}
   </div>
   <div class="carte">
     <h2>Critères</h2>
-    <label class="l" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="idem" style="width:22px;height:22px" ${c.idem?'checked':''}> Comme le dossier (${esc([D.gamme,D.essence,D.finition].filter(Boolean).join(' · ')||'non renseigné')})</label>
+    <label class="coche"><input type="checkbox" id="idem" ${c.idem?'checked':''}> Comme le dossier (${esc([D.gamme,D.essence,D.finition].filter(Boolean).join(' · ')||'non renseigné')})</label>
     ${c.idem ? '' : `
       <label class="l">Gamme</label>${chips('criteres.gamme', GAMMES, O)}
       <label class="l">Essence</label>${chips('criteres.essence', ESSENCES, O)}
@@ -452,6 +473,7 @@ function vueOuverture(){
   cb('imposte', v => O.imposte = v); cb('grandJour', v => O.grandJour = v); cb('soub', v => O.soubassement = v); cb('idem', v => O.criteres.idem = v);
   document.querySelectorAll('[data-step]').forEach(b => b.onclick = () => {
     const k = b.dataset.step; O[k] = String(Math.max(1, (+O[k]||0) + (+b.dataset.d))); O.iaChamps = O.iaChamps.filter(x=>x!==k);
+    const autre = k === 'carH' ? 'carL' : 'carH'; if (!O[autre]) O[autre] = '1';
     if(O.statut==='validée') O.statut='modifiée'; sauver(); const y=scrollY; vueOuverture(); scrollTo(0,y);
   });
   $('#valider').onclick = async () => {
@@ -503,7 +525,7 @@ function blocMedias(list){
     </div>`).join('')}</div>`;
 }
 function brancherMedias(ouvertureId){
-  document.querySelectorAll('[data-cap]').forEach(b => b.onclick = () => { mediaCible = ouvertureId; $('#capture').value=''; $('#capture').click(); });
+  document.querySelectorAll('[data-cap]').forEach(b => b.onclick = () => ouvrirCamera(ouvertureId));
   document.querySelectorAll('[data-gal]').forEach(b => b.onclick = () => { mediaCible = ouvertureId; $('#galerie').value=''; $('#galerie').click(); });
   document.querySelectorAll('[data-memo]').forEach(b => b.onclick = () => basculerMemo(ouvertureId, b));
   document.querySelectorAll('[data-transcrire]').forEach(c => c.onchange = async () => { const m = MEDIAS.find(x=>x.id===c.dataset.transcrire); m.transcrire = c.checked; await dbPut('medias', m); });
@@ -512,6 +534,66 @@ function brancherMedias(ouvertureId){
     if (!confirm('Retirer ce média du dossier (sur ce téléphone) ?')) return;
     await dbDel('medias', b.dataset.mdel); MEDIAS = MEDIAS.filter(m => m.id !== b.dataset.mdel); rafraichir();
   });
+}
+async function enregistrerMedia(blob, kind, nom){
+  const m = { id:uid(), dossierId:D.id, ouvertureId:mediaCible, kind, mime:blob.type || (kind==='photo'?'image/jpeg':'video/webm'), blob, nom, date:new Date().toISOString(), transcrire: kind==='audio', note:'', envoye:false };
+  await dbPut('medias', m); MEDIAS.push(m); return m;
+}
+/* Appareil photo intégré : s'ouvre directement, photo et vidéo dans le même écran */
+let CAM = null;
+async function ouvrirCamera(ouvertureId){
+  mediaCible = ouvertureId;
+  const repli = () => { $('#capture').setAttribute('accept','image/*'); $('#capture').value=''; $('#capture').click(); };
+  if (!navigator.mediaDevices?.getUserMedia) return repli();
+  let stream;
+  const video = { facingMode:{ideal:'environment'}, width:{ideal:1920}, height:{ideal:1080} };
+  try { stream = await navigator.mediaDevices.getUserMedia({ video, audio:true }); }
+  catch (e) { try { stream = await navigator.mediaDevices.getUserMedia({ video }); } catch (e2) { toast('Appareil photo refusé : autorisez-le dans Chrome'); return repli(); } }
+  const el = document.createElement('div'); el.id = 'cam';
+  el.innerHTML = `<video autoplay playsinline muted></video><div class="flash"></div>
+    <div class="haut"><button id="camFermer">✕ Fermer</button><span id="camNb"></span></div>
+    <div class="bas"><div class="lib"><button class="rec" id="camRec" aria-label="Vidéo"></button><br>Vidéo</div>
+      <div class="lib"><button class="declic" id="camPhoto" aria-label="Photo"></button><br>Photo</div>
+      <div class="lib" style="width:70px"></div></div>`;
+  document.body.appendChild(el);
+  const v = el.querySelector('video'); v.srcObject = stream;
+  CAM = { el, stream, n:0, rec:null, chunks:[], t0:0, timer:null };
+  const nb = () => el.querySelector('#camNb').textContent = CAM.n ? `${CAM.n} enregistré(s)` : '';
+  el.querySelector('#camFermer').onclick = () => fermerCamera(true);
+  el.querySelector('#camPhoto').onclick = async () => {
+    try {
+      const track = stream.getVideoTracks()[0]; let blob = null;
+      if ('ImageCapture' in window) { try { blob = await new ImageCapture(track).takePhoto(); } catch(_){} }
+      if (!blob) { const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v,0,0); blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92)); }
+      const f = el.querySelector('.flash'); f.style.opacity = .9; setTimeout(() => f.style.opacity = 0, 120);
+      await enregistrerMedia(blob, 'photo', 'photo'); CAM.n++; nb();
+    } catch (e) { toast('Photo impossible : ' + e.message); }
+  };
+  el.querySelector('#camRec').onclick = () => {
+    const b = el.querySelector('#camRec');
+    if (CAM.rec) { CAM.rec.stop(); return; }
+    const types = ['video/mp4','video/webm;codecs=vp9,opus','video/webm'];
+    const mt = types.find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || '';
+    CAM.chunks = []; CAM.rec = new MediaRecorder(stream, mt ? {mimeType: mt} : undefined);
+    CAM.rec.ondataavailable = e => e.data.size && CAM.chunks.push(e.data);
+    CAM.rec.onstop = async () => {
+      clearInterval(CAM.timer); el.querySelector('.chrono')?.remove(); b.classList.remove('on');
+      const blob = new Blob(CAM.chunks, {type: (CAM.chunks[0] && CAM.chunks[0].type) || mt || 'video/webm'}); CAM.rec = null;
+      if (blob.size) { await enregistrerMedia(blob, 'video', 'video'); CAM.n++; nb(); }
+      if (CAM._fermer) fermerCamera(true);
+    };
+    CAM.rec.start(1000); CAM.t0 = Date.now(); b.classList.add('on');
+    const ch = document.createElement('div'); ch.className = 'chrono'; el.appendChild(ch);
+    CAM.timer = setInterval(() => { const s = Math.round((Date.now()-CAM.t0)/1000); ch.textContent = `● ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; }, 300);
+  };
+}
+function fermerCamera(rafraichirVue){
+  if (!CAM) return;
+  if (CAM.rec && CAM.rec.state !== 'inactive') { CAM._fermer = true; CAM.rec.stop(); return; }
+  CAM.stream.getTracks().forEach(t => t.stop()); CAM.el.remove();
+  const n = CAM.n; CAM = null;
+  if (n) toast(`${n} média(s) ajouté(s)`);
+  if (rafraichirVue) rafraichir();
 }
 async function ajouterFichiers(files){
   for (const f of files) {
@@ -604,7 +686,8 @@ const SCHEMA_D = {
 const SYSTEME = `Tu aides Térence, menuisier (Héritage Bois), à remplir une fiche de relevé de chantier à partir de sa dictée (reconnaissance vocale, parfois bruitée).
 Règles :
 - Ne remplis QUE ce qui est dit dans la dictée. N'invente rien, ne mets aucune valeur par défaut.
-- Cotes en millimètres, nombres entiers. "1 m 20" ou "un mètre vingt" = 1200 ; "120" dit pour une fenêtre = probablement 1200 mm → mets 1200 ET signale le doute.
+- Cotes TOUJOURS converties en millimètres, nombres entiers, même si Térence parle en mètres ou en centimètres : "2 mètres" = 2000 ; "50 cm" = 500 ; "1 m 20" ou "un mètre vingt" = 1200 ; "1 m 35" = 1350. "120" dit pour une fenêtre = probablement 1200 mm → mets 1200 ET signale le doute.
+- Carreaux par vantail : si seul le nombre EN HAUTEUR est dit, carL = 1 ; si seul le nombre EN LARGEUR est dit, carH = 1 (ex. fixe 2000 × 500 avec "6 carreaux sur la largeur" → carH 1, carL 6). Si les deux sont dits, mets les deux (ex. "8 carreaux, 4 en hauteur et 2 en largeur" → 4 et 2). Si seul un total est dit sans répartition, ne remplis pas et signale-le dans "doutes".
 - Vocabulaire : OF1/OF2/OF3 = fenêtre 1/2/3 vantaux, PF = porte-fenêtre. "Cote hors-tout", "cote tableau", "dos de dormant". Carreaux TOUJOURS PAR VANTAIL : "H4 L2" ou "4 en hauteur 2 en largeur" → carH 4, carL 2. "Cintré" sans précision = Surbaissé. "Raymond" = crémone ; "Gibro" = Bros. "Bois et Halles" = Boizéal (gamme Essentielle = recouvrement). Fixe latéral = faux ouvrant. VP = vantail principal.
 - Hauteur de soubassement (soubH) = du bas de la menuiserie (dessous de la pièce d'appui ou du seuil alu du dormant) jusqu'au dessus de la traverse intermédiaire, là où commence le clair de vitrage. Si une hauteur de soubassement est dite : soubassement = true.
 - Si la largeur et la hauteur ont des références différentes, garde-les séparées.
@@ -651,6 +734,7 @@ function proposerIA(k, res){
       let v = l.nv; if (['imposte','grandJour','soubassement'].includes(l.p)) v = v === true || v === 'true' || v === 'oui';
       setP(c, l.p, v); if (l.p !== 'notes') c.iaChamps = [...new Set([...(c.iaChamps||[]), l.p])];
       if (l.p.startsWith('criteres.') && c.criteres) c.criteres.idem = false; });
+    if (c === O && (c.carH || c.carL) && !(c.carH && c.carL)) { const autre = c.carH ? 'carL' : 'carH'; c[autre] = '1'; c.iaChamps = [...new Set([...(c.iaChamps||[]), autre])]; }
     if (c === O && O.statut === 'validée') O.statut = 'modifiée';
     await sauverMaintenant(); toast('Cases remplies : vérifiez les cases orange'); rafraichir();
   };
