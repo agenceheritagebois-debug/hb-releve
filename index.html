@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#5b3a1e">
+<title>HB Relevé</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--bois:#5b3a1e;--bois2:#8a5a2b;--fond:#f6f1ea;--carte:#fff;--txt:#1d1a16;--gris:#6b645c;--ligne:#ddd3c6;--ok:#1f7a3a;--alerte:#b3261e;--ia:#c26a00;--bleu:#1f5f9e}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fond);color:var(--txt);font:17px/1.35 system-ui,-apple-system,Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--bois);color:#fff;display:flex;align-items:center;gap:8px;padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top))}
+header h1{font-size:18px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header button{background:transparent;border:0;color:#fff;font-size:22px;padding:4px 8px;min-width:40px}
+#reseau{font-size:12px;padding:3px 8px;border-radius:10px;background:#3a2412}
+#reseau.on{background:#2e7d32}
+main{padding:12px;padding-bottom:110px;max-width:760px;margin:0 auto}
+.carte{background:var(--carte);border:1px solid var(--ligne);border-radius:12px;padding:12px;margin-bottom:12px}
+.carte h2{font-size:15px;text-transform:uppercase;letter-spacing:.04em;color:var(--bois2);margin:0 0 8px}
+label.l{display:block;font-size:13px;color:var(--gris);margin:10px 0 4px}
+input,textarea,select{width:100%;font:inherit;padding:10px;border:1px solid var(--ligne);border-radius:8px;background:#fff;color:var(--txt)}
+textarea{min-height:70px;resize:vertical}
+input.cote{font-size:28px;font-weight:700;text-align:center;letter-spacing:.03em;padding:8px}
+.ia-flag{border-color:var(--ia)!important;box-shadow:0 0 0 2px #f5c58a}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--ligne);background:#fff;border-radius:20px;padding:9px 13px;font:inherit;font-size:15px;color:var(--txt)}
+.chip.on{background:var(--bois);border-color:var(--bois);color:#fff}
+.chip.ia{border-color:var(--ia);box-shadow:0 0 0 2px #f5c58a}
+.ligne2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ligne3{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:13px 16px;font:inherit;font-weight:600;background:var(--bois);color:#fff;min-height:48px}
+.btn.sec{background:#efe6da;color:var(--bois)}
+.btn.vert{background:var(--ok)}
+.btn.rouge{background:var(--alerte)}
+.btn.bleu{background:var(--bleu)}
+.btn.ia{background:var(--ia)}
+.btn.plein{width:100%}
+.btn:disabled{opacity:.45}
+.barre{display:flex;gap:8px;flex-wrap:wrap}
+.barre .btn{flex:1}
+.item{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--ligne);border-radius:10px;background:#fff;margin-bottom:8px}
+.item .t{flex:1;min-width:0}
+.item .t b{display:block}
+.item .t small{color:var(--gris)}
+.badge{font-size:12px;padding:3px 8px;border-radius:10px;background:#eee;white-space:nowrap}
+.badge.ok{background:#d9f0df;color:var(--ok)}
+.badge.enc{background:#fde7c8;color:#8a4b00}
+.badge.env{background:#dbe8f7;color:var(--bleu)}
+.alertes{margin:0;padding:0;list-style:none}
+.alertes li{background:#fdecea;color:var(--alerte);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:15px}
+.alertes li.info{background:#fff4e0;color:#8a4b00}
+.medias{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.media{border:1px solid var(--ligne);border-radius:10px;overflow:hidden;background:#fff;font-size:14px}
+.media img,.media video{width:100%;height:110px;object-fit:cover;display:block;background:#222}
+.media audio{width:100%}
+.media .c{padding:6px 8px}
+.media label{display:flex;gap:6px;align-items:center}
+.media input[type=checkbox]{width:22px;height:22px}
+.fab{position:fixed;left:0;right:0;bottom:0;padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--fond) 30%);display:flex;gap:8px;max-width:760px;margin:0 auto}
+.fab .btn{flex:1}
+.rec{animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.55}}
+.muted{color:var(--gris);font-size:14px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;z-index:20;font-size:15px;max-width:90%}
+details summary{cursor:pointer;font-weight:600;color:var(--bois2);padding:6px 0}
+.prop{border:1px solid var(--ia);border-radius:10px;padding:10px;background:#fffaf2;margin-top:10px}
+.prop label{display:flex;gap:8px;align-items:flex-start;padding:4px 0}
+.prop input{width:22px;height:22px;flex:none}
+.progress{height:10px;background:#eee;border-radius:6px;overflow:hidden}
+.progress div{height:100%;background:var(--bleu);width:0}
+.step{display:flex;align-items:center;gap:8px}
+.step button{width:48px;height:48px;font-size:24px;border-radius:10px;border:1px solid var(--ligne);background:#fff}
+.step input{text-align:center;font-size:22px;font-weight:700}
+</style>
+</head>
+<body>
+<header>
+  <button id="retour" aria-label="Retour" hidden>←</button>
+  <h1 id="titre">HB Relevé</h1>
+  <span id="reseau">hors ligne</span>
+  <button id="btnReglages" aria-label="Réglages">⚙</button>
+</header>
+<main id="app"></main>
+<input type="file" id="capture" accept="image/*,video/*" capture="environment" hidden>
+<input type="file" id="galerie" accept="image/*,video/*,audio/*" multiple hidden>
+<input type="file" id="importFichier" accept=".json,application/json" hidden>
+<script>
+'use strict';
+/* =====================================================================
+   HB Relevé — Héritage Bois — relevé de chantier hors ligne
+   Version 0.1 (17/11/2026). Données stockées sur le téléphone (IndexedDB).
+   ===================================================================== */
+const VERSION = '0.1';
+const FORMAT = 'hb-releve-1';
+
+/* ---------- Listes (vocabulaire Térence, Synthèse § 2) ---------- */
+const TYPES = ['OF1','OF2','OF3','OF4','PF1','PF2','PF3','Fixe','Porte 1V','Porte 2V','Volet 1V','Volet 2V','Volet 4V','Autre'];
+const REFS = ['Hors-tout','Tableau','Dos de dormant'];
+const NATURES = ['Fenêtres','Portes-fenêtres','Portes','Volets','Restauration'];
+const GAMMES = ['Recouvrement 58','Affleurante 58, paumelles semi-encastrées','Affleurante 58, paumelles non encastrées','À définir'];
+const FINITIONS = ['Pré-peinture blanche','Peinture de finition','Lasure','Brut','Variante'];
+const ESSENCES = ['Chêne','Pin','Mélèze','Sapelli','Moabi','À définir'];
+const VITRAGES = ['STD 4/18/4','44.2','SP10','Sans','À définir'];
+const POSES = ['Fourniture + pose','Fourniture seule'];
+const FIXES = ['Aucun','Gauche','Droite','Gauche + droite'];
+const FORMES = ['Droite','Cintrée'];
+const CINTRES = ['Surbaissé','Plein cintre','Anse de panier'];
+const SENS_1V = ['Tirant gauche','Tirant droit'];
+const SENS_2V = ['VP à droite','VP à gauche'];
+
+/* ---------- Petits outils ---------- */
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const auj = () => new Date().toISOString().slice(0,10);
+const getP = (o,p) => p.split('.').reduce((a,k)=>a==null?a:a[k], o);
+const setP = (o,p,v) => { const k=p.split('.'); let a=o; k.slice(0,-1).forEach(x=>{ if(a[x]==null||typeof a[x]!=='object') a[x]={}; a=a[x]; }); a[k[k.length-1]]=v; };
+const slug = s => (s||'SANS NOM').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9 _-]/g,'').trim().replace(/\s+/g,'_').toUpperCase().slice(0,40) || 'SANS_NOM';
+function toast(m, ms=2600){ const t=document.createElement('div'); t.className='toast'; t.textContent=m; document.body.appendChild(t); setTimeout(()=>t.remove(), ms); }
+function lsGet(k, d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }
+function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+
+/* ---------- Base locale (IndexedDB) ---------- */
+let DB;
+function ouvrirDB(){
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('hb-releve', 1);
+    r.onupgradeneeded = () => {
+      const d = r.result;
+      d.createObjectStore('dossiers', {keyPath:'id'});
+      d.createObjectStore('ouvertures', {keyPath:'id'}).createIndex('dossierId','dossierId');
+      d.createObjectStore('medias', {keyPath:'id'}).createIndex('dossierId','dossierId');
+      d.createObjectStore('reglages', {keyPath:'k'});
+    };
+    r.onsuccess = () => { DB = r.result; res(); };
+    r.onerror = () => rej(r.error);
+  });
+}
+function tx(store, mode, fn){
+  return new Promise((res, rej) => {
+    const t = DB.transaction(store, mode); const s = t.objectStore(store);
+    let out; const r = fn(s); if (r) r.onsuccess = () => out = r.result;
+    t.oncomplete = () => res(out); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+  });
+}
+const dbPut = (s, v) => tx(s, 'readwrite', st => st.put(v));
+const dbGet = (s, k) => tx(s, 'readonly', st => st.get(k));
+const dbDel = (s, k) => tx(s, 'readwrite', st => st.delete(k));
+const dbAll = s => tx(s, 'readonly', st => st.getAll());
+const dbParDossier = (s, id) => tx(s, 'readonly', st => st.index('dossierId').getAll(id));
+
+/* Réglages (clés saisies par Térence lui-même, gardées sur le téléphone) */
+const REG = { cleIA:'', modeleIA:'claude-sonnet-5-5', dbxAppKey:'', dbxRefresh:'', dbxAccess:'', dbxExpire:0, dbxRacine:'/_HERITAGE BOIS SAS/RELEVES APP' };
+async function chargerReglages(){ const all = await dbAll('reglages'); all.forEach(r => REG[r.k] = r.v); }
+async function reg(k, v){ REG[k] = v; await dbPut('reglages', {k, v}); }
+
+/* ---------- Modèles ---------- */
+function nouveauDossier(){
+  return { id:uid(), format:FORMAT, cree:new Date().toISOString(), maj:new Date().toISOString(),
+    client:'', adresse:'', tel:'', email:'', numero:'', dateRdv:auj(), nature:[], gamme:'', essence:'', finition:'', teinte:'RAL 9010',
+    vitrage:'STD 4/18/4', pose:'Fourniture + pose', depose:'', notes:'', dictee:'', test:false, archive:false, envois:[], iaChamps:[] };
+}
+function nouvelleOuverture(dossierId, num){
+  return { id:uid(), dossierId, num, repere:'', piece:'', type:'', fixes:'Aucun', imposte:false, forme:'Droite',
+    cintre:{type:'', fleche:'', flecheRef:'', piedDroit:'', piedDroitRef:''},
+    L:'', Lref:'', H:'', Href:'', grandJour:false, carH:'', carL:'', sens:'', soubassement:false,
+    criteres:{idem:true, gamme:'', essence:'', finition:'', vitrage:''},
+    notes:'', dictee:'', statut:'en cours', iaChamps:[], maj:new Date().toISOString() };
+}
+const nbVantaux = t => { const m = /(\d)/.exec(t||''); if(m) return +m[1]; if(/^(Fixe)$/.test(t)) return 0; return 1; };
+
+/* ---------- Contrôles de cohérence (alertent, ne bloquent jamais) ---------- */
+function controles(o){
+  const a = [];
+  const L = +o.L, H = +o.H, t = o.type || '';
+  if (!t) a.push(['err','Type d’ouvrage non choisi']);
+  if (!o.L) a.push(['err','Largeur manquante']); else if (!o.Lref) a.push(['err','Largeur : choisir hors-tout, tableau ou dos de dormant']);
+  if (!o.H) a.push(['err','Hauteur manquante']); else if (!o.Href) a.push(['err','Hauteur : choisir hors-tout, tableau ou dos de dormant']);
+  if (o.L && (L < 150 || L > 5000)) a.push(['err',`Largeur ${L} mm : hors plage habituelle, vérifier (mm ?)`]);
+  if (o.H && (H < 150 || H > 5000)) a.push(['err',`Hauteur ${H} mm : hors plage habituelle, vérifier (mm ?)`]);
+  if (/^PF/.test(t) && H && H < 1800) a.push(['info',`PF de ${H} de haut : vérifier (fenêtre ?)`]);
+  if (/^OF/.test(t) && H && H > 2300) a.push(['info',`OF de ${H} de haut : vérifier (porte-fenêtre ?)`]);
+  if (/^(OF|PF)/.test(t) && L && H && L > H*1.8) a.push(['info','Largeur bien plus grande que la hauteur : cotes inversées ?']);
+  if (/^(OF2|PF2)/.test(t) && L && L < 700) a.push(['info',`${t} de ${L} de large : vantaux très étroits, vérifier`]);
+  if (o.forme === 'Cintrée') {
+    if (!o.cintre.fleche) a.push(['err','Cintrée : flèche manquante']);
+    else if (!o.cintre.flecheRef) a.push(['err','Flèche : préciser tableau ou hors-tout']);
+    if (o.cintre.type === 'Plein cintre' && o.cintre.fleche && L && Math.abs(+o.cintre.fleche - L/2) > 30) a.push(['info','Plein cintre : flèche ≠ demi-largeur, vérifier']);
+    if (o.cintre.fleche && H && +o.cintre.fleche >= H) a.push(['err','Flèche ≥ hauteur : impossible']);
+  }
+  if (/^(OF|PF|Porte)/.test(t) && !o.grandJour && (!o.carH || !o.carL)) a.push(['info','Carreaux par vantail non renseignés (ou cocher Grand jour)']);
+  if (o.Lref && o.Href && o.Lref !== o.Href) a.push(['info',`Largeur en ${o.Lref.toLowerCase()}, hauteur en ${o.Href.toLowerCase()} : voulu ?`]);
+  if (o.iaChamps && o.iaChamps.length) a.push(['info',`${o.iaChamps.length} case(s) remplie(s) par l’IA à vérifier (en orange)`]);
+  return a;
+}
+
+/* ---------- État / navigation (le bouton retour Android marche) ---------- */
+let D = null, O = null, OUVS = [], MEDIAS = [];
+const URLS = new Map();
+function urlMedia(m){ if(!URLS.has(m.id)) URLS.set(m.id, URL.createObjectURL(m.blob)); return URLS.get(m.id); }
+function aller(h){ location.hash = h; }
+window.addEventListener('hashchange', route);
+async function route(){
+  stopDictee(); stopMemo(true);
+  const h = location.hash.slice(1) || '/';
+  const p = h.split('/').filter(Boolean);
+  $('#retour').hidden = p.length === 0;
+  if (p[0] === 'd' && p[1]) { await chargerDossier(p[1]); return vueDossier(); }
+  if (p[0] === 'o' && p[1]) { O = await dbGet('ouvertures', p[1]); if(!O) return aller('/'); await chargerDossier(O.dossierId); return vueOuverture(); }
+  if (p[0] === 'envoi' && p[1]) { await chargerDossier(p[1]); return vueEnvoi(); }
+  if (p[0] === 'reglages') return vueReglages();
+  return vueListe();
+}
+async function chargerDossier(id){
+  D = await dbGet('dossiers', id);
+  if(!D){ aller('/'); throw new Error('dossier introuvable'); }
+  OUVS = (await dbParDossier('ouvertures', id)).sort((a,b)=>a.num-b.num);
+  MEDIAS = (await dbParDossier('medias', id)).sort((a,b)=>a.date.localeCompare(b.date));
+}
+$('#retour').onclick = () => history.length > 1 ? history.back() : aller('/');
+$('#btnReglages').onclick = () => aller('/reglages');
+
+/* Sauvegarde automatique */
+let tSave = null;
+function sauver(){ clearTimeout(tSave); tSave = setTimeout(sauverMaintenant, 350); }
+async function sauverMaintenant(){
+  clearTimeout(tSave);
+  if (D) { D.maj = new Date().toISOString(); await dbPut('dossiers', D); }
+  if (O) { O.maj = new Date().toISOString(); await dbPut('ouvertures', O); }
+}
+window.addEventListener('pagehide', sauverMaintenant);
+document.addEventListener('visibilitychange', () => { if (document.hidden) sauverMaintenant(); });
+
+/* ---------- Composants ---------- */
+function chips(path, options, cible, multi=false){
+  const v = getP(cible, path);
+  const ia = (cible.iaChamps||[]).includes(path);
+  return `<div class="chips">${options.map(x => {
+    const on = multi ? (v||[]).includes(x) : v === x;
+    return `<button class="chip${on?' on':''}${on&&ia?' ia':''}" data-chip="${esc(path)}" data-v="${esc(x)}" data-multi="${multi?1:0}">${esc(x)}</button>`;
+  }).join('')}</div>`;
+}
+function champ(path, cible, opts={}){
+  const v = getP(cible, path) ?? '';
+  const ia = (cible.iaChamps||[]).includes(path) ? ' ia-flag' : '';
+  if (opts.zone) return `<textarea data-f="${path}" class="${ia}" placeholder="${esc(opts.ph||'')}">${esc(v)}</textarea>`;
+  const num = opts.num ? ' inputmode="numeric" pattern="[0-9]*"' : '';
+  return `<input data-f="${path}" class="${opts.cote?'cote':''}${ia}" value="${esc(v)}" placeholder="${esc(opts.ph||'')}"${num} type="${opts.type||'text'}" autocomplete="off">`;
+}
+function cible(el){ return el.closest('[data-cible="d"]') ? D : O; }
+
+document.addEventListener('input', e => {
+  const el = e.target; const p = el.dataset.f; if (!p) return;
+  const c = cible(el); if (!c) return;
+  let v = el.value;
+  if (el.inputMode === 'numeric') { v = v.replace(/[^0-9]/g,''); if (v !== el.value) el.value = v; }
+  setP(c, p, v);
+  c.iaChamps = (c.iaChamps||[]).filter(x => x !== p); el.classList.remove('ia-flag');
+  if (c === O && O.statut === 'validée') { O.statut = 'modifiée'; }
+  sauver();
+  if (c === O && el.dataset.live) majControles();
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-chip]'); if (!b) return;
+  const c = cible(b); if (!c) return;
+  const p = b.dataset.chip, v = b.dataset.v;
+  if (b.dataset.multi === '1') { const arr = getP(c,p) || []; setP(c, p, arr.includes(v) ? arr.filter(x=>x!==v) : [...arr, v]); }
+  else setP(c, p, getP(c,p) === v ? '' : v);
+  c.iaChamps = (c.iaChamps||[]).filter(x => x !== p);
+  if (c === O && O.statut === 'validée') O.statut = 'modifiée';
+  sauver();
+  const y = window.scrollY; (c === O ? vueOuverture() : vueDossier()); window.scrollTo(0, y);
+});
+
+/* =================== VUE : liste des dossiers =================== */
+async function vueListe(){
+  D = null; O = null;
+  $('#titre').textContent = 'HB Relevé — dossiers';
+  const ds = (await dbAll('dossiers')).filter(d => !d.archive).sort((a,b)=>b.maj.localeCompare(a.maj));
+  const ouvs = await dbAll('ouvertures');
+  $('#app').innerHTML = `
+  <div class="carte">
+    <h2>Nouveau</h2>
+    <div class="barre">
+      <button class="btn" id="nv">＋ Nouveau dossier</button>
+      <button class="btn sec" id="imp">Importer un dossier préparé</button>
+    </div>
+    ${REG.dbxRefresh ? `<button class="btn sec plein" style="margin-top:8px" id="impDbx">Récupérer les dossiers préparés (Dropbox)</button>` : ''}
+  </div>
+  ${ds.length ? ds.map(d => {
+    const os = ouvs.filter(o => o.dossierId === d.id);
+    const val = os.filter(o => o.statut === 'validée').length;
+    const env = d.envois.length ? `<span class="badge env">envoyé ${d.envois[d.envois.length-1].date.slice(5,10).split('-').reverse().join('/')}</span>` : '';
+    return `<div class="item" data-ouvrir="${d.id}"><div class="t"><b>${esc(d.client||'(sans nom)')}${d.test?' · TEST':''}</b>
+      <small>${esc(d.dateRdv||'')} · ${os.length} ouverture(s) · ${val} validée(s)${d.numero?' · '+esc(d.numero):''}</small></div>${env}</div>`;
+  }).join('') : `<p class="muted">Aucun dossier. Créez-en un, ou importez un dossier préparé par Claude.</p>`}
+  <details><summary>Dossiers archivés</summary><div id="arch"></div></details>
+  <p class="muted">Version ${VERSION} · données gardées sur ce téléphone.</p>`;
+  $('#nv').onclick = async () => { const d = nouveauDossier(); await dbPut('dossiers', d); aller('/d/'+d.id); };
+  $('#imp').onclick = () => $('#importFichier').click();
+  if ($('#impDbx')) $('#impDbx').onclick = importerDepuisDropbox;
+  document.querySelectorAll('[data-ouvrir]').forEach(x => x.onclick = () => aller('/d/'+x.dataset.ouvrir));
+  const ar = (await dbAll('dossiers')).filter(d => d.archive);
+  $('#arch').innerHTML = ar.length ? ar.map(d => `<div class="item" data-ouvrir2="${d.id}"><div class="t"><b>${esc(d.client||'(sans nom)')}</b><small>${esc(d.dateRdv)}</small></div></div>`).join('') : '<p class="muted">Aucun.</p>';
+  document.querySelectorAll('[data-ouvrir2]').forEach(x => x.onclick = () => aller('/d/'+x.dataset.ouvrir2));
+}
+
+/* =================== VUE : dossier =================== */
+function vueDossier(){
+  O = null;
+  $('#titre').textContent = D.client || 'Nouveau dossier';
+  const md = MEDIAS.filter(m => !m.ouvertureId);
+  $('#app').innerHTML = `
+  <div data-cible="d">
+  <div class="carte">
+    <h2>Client</h2>
+    <label class="l">Nom du client</label>${champ('client', D, {ph:'ex. DIAZ'})}
+    <label class="l">Adresse du chantier</label>${champ('adresse', D)}
+    <div class="ligne2"><div><label class="l">Téléphone</label>${champ('tel', D, {type:'tel'})}</div>
+    <div><label class="l">Date du RDV</label>${champ('dateRdv', D, {type:'date'})}</div></div>
+    <div class="ligne2"><div><label class="l">E-mail</label>${champ('email', D, {type:'email'})}</div>
+    <div><label class="l">N° dossier HB</label>${champ('numero', D, {ph:'HB-…'})}</div></div>
+    <label class="l" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="estTest" style="width:22px;height:22px" ${D.test?'checked':''}> Dossier de TEST</label>
+  </div>
+  <div class="carte">
+    <h2>Critères généraux (toutes les ouvertures)</h2>
+    <label class="l">Nature des travaux</label>${chips('nature', NATURES, D, true)}
+    <label class="l">Gamme</label>${chips('gamme', GAMMES, D)}${champ('gamme', D, {ph:'ou saisir / dicter une autre gamme'})}
+    <label class="l">Essence</label>${chips('essence', ESSENCES, D)}
+    <label class="l">Finition</label>${chips('finition', FINITIONS, D)}
+    <label class="l">Teinte</label>${champ('teinte', D)}
+    <label class="l">Vitrage</label>${chips('vitrage', VITRAGES, D)}
+    <label class="l">Pose</label>${chips('pose', POSES, D)}
+    <label class="l">Dépose des anciennes menuiseries</label>${chips('depose', ['Oui','Non','Par le client / maçon'], D)}
+    <label class="l">Remarques générales</label>${champ('notes', D, {zone:1})}
+  </div>
+  ${blocDictee('d')}
+  <div class="carte">
+    <h2>Photos, vidéos, mémos du dossier</h2>
+    ${blocMedias(md)}
+  </div>
+  </div>
+  <div class="carte">
+    <h2>Ouvertures (${OUVS.length})</h2>
+    ${OUVS.map(o => {
+      const al = controles(o).filter(x=>x[0]==='err').length;
+      const st = o.statut === 'validée' ? '<span class="badge ok">validée</span>' : o.statut === 'modifiée' ? '<span class="badge enc">modifiée</span>' : '<span class="badge enc">en cours</span>';
+      const nm = MEDIAS.filter(m => m.ouvertureId === o.id).length;
+      return `<div class="item" data-o="${o.id}"><div class="t"><b>N°${o.num}${o.repere?' · '+esc(o.repere):''} — ${esc(o.type||'?')}${o.forme==='Cintrée'?' cintrée':''}</b>
+      <small>${o.L||'?'} × ${o.H||'?'} ${o.Lref?esc(o.Lref.toLowerCase()):''}${o.piece?' · '+esc(o.piece):''}${nm?' · '+nm+' média(s)':''}${al?' · ⚠ '+al:''}</small></div>${st}</div>`;
+    }).join('') || '<p class="muted">Aucune ouverture.</p>'}
+  </div>
+  <div class="barre" style="margin-bottom:12px">
+    <button class="btn sec" id="archiver">${D.archive?'Désarchiver':'Archiver le dossier'}</button>
+  </div>
+  <div class="fab">
+    <button class="btn" id="nvO">＋ Ouverture n°${(OUVS.at(-1)?.num||0)+1}</button>
+    <button class="btn bleu" id="envoyer">Envoyer ↑</button>
+  </div>`;
+  $('#estTest').onchange = e => { D.test = e.target.checked; sauver(); };
+  document.querySelectorAll('[data-o]').forEach(x => x.onclick = () => aller('/o/'+x.dataset.o));
+  $('#nvO').onclick = async () => { await sauverMaintenant(); const o = nouvelleOuverture(D.id, (OUVS.at(-1)?.num||0)+1); await dbPut('ouvertures', o); aller('/o/'+o.id); };
+  $('#envoyer').onclick = async () => { await sauverMaintenant(); aller('/envoi/'+D.id); };
+  $('#archiver').onclick = async () => { D.archive = !D.archive; await sauverMaintenant(); toast(D.archive?'Dossier archivé':'Dossier désarchivé'); aller('/'); };
+  brancherMedias(null); brancherDictee('d');
+}
+
+/* =================== VUE : ouverture =================== */
+function vueOuverture(){
+  $('#titre').textContent = `${D.client||'Dossier'} · N°${O.num}`;
+  const nv = nbVantaux(O.type);
+  const mo = MEDIAS.filter(m => m.ouvertureId === O.id);
+  const c = O.criteres;
+  $('#app').innerHTML = `
+  <div data-cible="o">
+  ${blocDictee('o')}
+  <div class="carte">
+    <h2>Ouverture n°${O.num}</h2>
+    <div class="ligne2"><div><label class="l">Repère</label>${champ('repere', O, {ph:'ex. OF-01'})}</div>
+    <div><label class="l">Pièce / étage</label>${champ('piece', O, {ph:'ex. cuisine RDC'})}</div></div>
+    <label class="l">Type d’ouvrage</label>${chips('type', TYPES, O)}
+    ${/^(OF|PF)/.test(O.type)||O.type==='Fixe' ? `<label class="l">Fixe latéral</label>${chips('fixes', FIXES, O)}
+      <label class="l" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="imposte" style="width:22px;height:22px" ${O.imposte?'checked':''}> Imposte</label>` : ''}
+    <label class="l">Forme</label>${chips('forme', FORMES, O)}
+  </div>
+  <div class="carte">
+    <h2>Cotes (mm)</h2>
+    <label class="l">Largeur</label>${champ('L', O, {num:1, cote:1, ph:'largeur'}).replace('data-f','data-live="1" data-f')}
+    ${chips('Lref', REFS, O)}
+    <label class="l">Hauteur</label>${champ('H', O, {num:1, cote:1, ph:'hauteur'}).replace('data-f','data-live="1" data-f')}
+    ${chips('Href', REFS, O)}
+    ${O.forme === 'Cintrée' ? `
+      <label class="l">Type de cintre</label>${chips('cintre.type', CINTRES, O)}
+      <div class="ligne2"><div><label class="l">Flèche</label>${champ('cintre.fleche', O, {num:1, cote:1}).replace('data-f','data-live="1" data-f')}</div>
+      <div><label class="l">Pied droit</label>${champ('cintre.piedDroit', O, {num:1, cote:1})}</div></div>
+      <label class="l">Flèche en</label>${chips('cintre.flecheRef', ['Tableau','Hors-tout'], O)}
+      <label class="l">Pied droit en</label>${chips('cintre.piedDroitRef', ['Tableau','Hors-tout'], O)}` : ''}
+  </div>
+  <div class="carte">
+    <h2>Carreaux par vantail · sens</h2>
+    ${/^(Volet)/.test(O.type) ? '<p class="muted">Volet : pas de carreaux.</p>' : `
+    <label class="l" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="grandJour" style="width:22px;height:22px" ${O.grandJour?'checked':''}> Grand jour (pas de petit bois)</label>
+    ${O.grandJour ? '' : `<div class="ligne3">
+      <div><label class="l">H (en hauteur)</label><div class="step"><button data-step="carH" data-d="-1">−</button>${champ('carH', O, {num:1})}<button data-step="carH" data-d="1">＋</button></div></div>
+      <div style="padding-top:28px;font-size:22px">×</div>
+      <div><label class="l">L (en largeur)</label><div class="step"><button data-step="carL" data-d="-1">−</button>${champ('carL', O, {num:1})}<button data-step="carL" data-d="1">＋</button></div></div>
+    </div>`}
+    <label class="l" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="soub" style="width:22px;height:22px" ${O.soubassement?'checked':''}> Soubassement (panneau)</label>`}
+    ${nv === 1 ? `<label class="l">Sens (vue intérieure)</label>${chips('sens', SENS_1V, O)}` : nv >= 2 ? `<label class="l">Sens (vue intérieure)</label>${chips('sens', SENS_2V, O)}` : ''}
+  </div>
+  <div class="carte">
+    <h2>Critères</h2>
+    <label class="l" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="idem" style="width:22px;height:22px" ${c.idem?'checked':''}> Comme le dossier (${esc([D.gamme,D.essence,D.finition].filter(Boolean).join(' · ')||'non renseigné')})</label>
+    ${c.idem ? '' : `
+      <label class="l">Gamme</label>${chips('criteres.gamme', GAMMES, O)}
+      <label class="l">Essence</label>${chips('criteres.essence', ESSENCES, O)}
+      <label class="l">Finition</label>${chips('criteres.finition', FINITIONS, O)}
+      <label class="l">Vitrage</label>${chips('criteres.vitrage', VITRAGES, O)}`}
+    <label class="l">Remarques (état, contraintes, allège, appui…)</label>${champ('notes', O, {zone:1, ph:'Le micro du clavier fonctionne ici'})}
+  </div>
+  <div class="carte">
+    <h2>Photos, vidéos, mémos</h2>
+    ${blocMedias(mo)}
+  </div>
+  </div>
+  <div class="carte">
+    <h2>Contrôles</h2>
+    <ul class="alertes" id="ctrl"></ul>
+    <div class="barre">
+      <button class="btn sec" id="dupliquer">Dupliquer</button>
+      <button class="btn sec" id="supprimer">Supprimer</button>
+    </div>
+  </div>
+  <div class="fab">
+    <button class="btn ${O.statut==='validée'?'sec':'vert'}" id="valider">${O.statut==='validée'?'✓ Validée':'✓ Valider l’ouverture'}</button>
+    <button class="btn" id="suivante">Suivante →</button>
+  </div>`;
+  majControles();
+  const cb = (id, fn) => { const el = $('#'+id); if (el) el.onchange = e => { fn(e.target.checked); if(O.statut==='validée') O.statut='modifiée'; sauver(); const y=scrollY; vueOuverture(); scrollTo(0,y); }; };
+  cb('imposte', v => O.imposte = v); cb('grandJour', v => O.grandJour = v); cb('soub', v => O.soubassement = v); cb('idem', v => O.criteres.idem = v);
+  document.querySelectorAll('[data-step]').forEach(b => b.onclick = () => {
+    const k = b.dataset.step; O[k] = String(Math.max(1, (+O[k]||0) + (+b.dataset.d))); O.iaChamps = O.iaChamps.filter(x=>x!==k);
+    if(O.statut==='validée') O.statut='modifiée'; sauver(); const y=scrollY; vueOuverture(); scrollTo(0,y);
+  });
+  $('#valider').onclick = async () => {
+    const err = controles(O).filter(x => x[0]==='err');
+    if (err.length && !confirm(`Il reste ${err.length} point(s) à corriger :\n- ${err.map(x=>x[1]).join('\n- ')}\n\nValider quand même ?`)) return;
+    O.statut = 'validée'; O.iaChamps = []; await sauverMaintenant(); toast('Ouverture validée'); const y=scrollY; vueOuverture(); scrollTo(0,y);
+  };
+  $('#suivante').onclick = async () => {
+    await sauverMaintenant();
+    const n = OUVS.find(o => o.num > O.num);
+    if (n) return aller('/o/'+n.id);
+    const o = nouvelleOuverture(D.id, O.num + 1); await dbPut('ouvertures', o); aller('/o/'+o.id);
+  };
+  $('#dupliquer').onclick = async () => {
+    await sauverMaintenant();
+    const n = JSON.parse(JSON.stringify(O)); n.id = uid(); n.num = (OUVS.at(-1)?.num||0) + 1; n.repere = ''; n.statut = 'en cours'; n.iaChamps = []; n.dictee = '';
+    await dbPut('ouvertures', n); toast(`Copie créée : n°${n.num}`); aller('/o/'+n.id);
+  };
+  $('#supprimer').onclick = async () => {
+    if (!confirm(`Supprimer l’ouverture n°${O.num} et ses médias de ce téléphone ?`)) return;
+    for (const m of MEDIAS.filter(m => m.ouvertureId === O.id)) await dbDel('medias', m.id);
+    await dbDel('ouvertures', O.id); const id = D.id; O = null; aller('/d/'+id);
+  };
+  brancherMedias(O.id); brancherDictee('o');
+}
+function majControles(){
+  const el = $('#ctrl'); if (!el) return;
+  const a = controles(O);
+  el.innerHTML = a.length ? a.map(x => `<li class="${x[0]==='info'?'info':''}">${x[0]==='err'?'⚠':'ℹ'} ${esc(x[1])}</li>`).join('') : '<li class="info" style="background:#d9f0df;color:#1f7a3a">✓ Aucun point bloquant</li>';
+}
+
+/* =================== Médias : photo / vidéo / mémo =================== */
+let mediaCible = null;
+function blocMedias(list){
+  return `<div class="barre" style="margin-bottom:10px">
+    <button class="btn" data-cap="1">📷 Photo / vidéo</button>
+    <button class="btn sec" data-memo="1" id="btnMemo">🎙 Mémo vocal</button>
+  </div>
+  <button class="btn sec plein" data-gal="1" style="margin-bottom:10px;min-height:40px;padding:8px">Ajouter depuis la galerie</button>
+  <div class="medias">${list.map(m => `
+    <div class="media">
+      ${m.kind==='photo' ? `<img src="${urlMedia(m)}" alt="">` : m.kind==='video' ? `<video src="${urlMedia(m)}" controls preload="metadata"></video>` : `<div class="c"><b>🎙 Mémo</b></div><audio src="${urlMedia(m)}" controls></audio>`}
+      <div class="c">
+        ${m.kind==='photo' ? '<small class="muted">Analysée par Claude au bureau</small>' : `<label><input type="checkbox" data-transcrire="${m.id}" ${m.transcrire?'checked':''}> À transcrire (infos importantes)</label>`}
+        <input data-mnote="${m.id}" value="${esc(m.note||'')}" placeholder="légende" style="margin-top:6px;padding:6px;font-size:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><small class="muted">${m.date.slice(11,16)}${m.envoye?' · envoyé':''}</small>
+        <button class="chip" data-mdel="${m.id}" style="padding:4px 10px">✕</button></div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+function brancherMedias(ouvertureId){
+  document.querySelectorAll('[data-cap]').forEach(b => b.onclick = () => { mediaCible = ouvertureId; $('#capture').value=''; $('#capture').click(); });
+  document.querySelectorAll('[data-gal]').forEach(b => b.onclick = () => { mediaCible = ouvertureId; $('#galerie').value=''; $('#galerie').click(); });
+  document.querySelectorAll('[data-memo]').forEach(b => b.onclick = () => basculerMemo(ouvertureId, b));
+  document.querySelectorAll('[data-transcrire]').forEach(c => c.onchange = async () => { const m = MEDIAS.find(x=>x.id===c.dataset.transcrire); m.transcrire = c.checked; await dbPut('medias', m); });
+  document.querySelectorAll('[data-mnote]').forEach(c => c.onchange = async () => { const m = MEDIAS.find(x=>x.id===c.dataset.mnote); m.note = c.value; await dbPut('medias', m); });
+  document.querySelectorAll('[data-mdel]').forEach(b => b.onclick = async () => {
+    if (!confirm('Retirer ce média du dossier (sur ce téléphone) ?')) return;
+    await dbDel('medias', b.dataset.mdel); MEDIAS = MEDIAS.filter(m => m.id !== b.dataset.mdel); rafraichir();
+  });
+}
+async function ajouterFichiers(files){
+  for (const f of files) {
+    const kind = f.type.startsWith('image') ? 'photo' : f.type.startsWith('video') ? 'video' : f.type.startsWith('audio') ? 'audio' : null;
+    if (!kind) continue;
+    const m = { id:uid(), dossierId:D.id, ouvertureId:mediaCible, kind, mime:f.type, blob:f, nom:f.name||kind, date:new Date().toISOString(), transcrire: kind==='audio', note:'', envoye:false };
+    await dbPut('medias', m); MEDIAS.push(m);
+  }
+  toast(files.length > 1 ? `${files.length} médias ajoutés` : 'Média ajouté');
+  rafraichir();
+}
+$('#capture').onchange = e => e.target.files.length && ajouterFichiers([...e.target.files]);
+$('#galerie').onchange = e => e.target.files.length && ajouterFichiers([...e.target.files]);
+function rafraichir(){ const y = scrollY; (O ? vueOuverture() : vueDossier()); scrollTo(0, y); }
+
+let rec = null, recChunks = [], recDebut = 0, recTimer = null, recCible = null;
+async function basculerMemo(ouvertureId, btn){
+  if (rec) return stopMemo();
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    recChunks = []; recCible = ouvertureId;
+    rec = new MediaRecorder(stream);
+    rec.ondataavailable = e => e.data.size && recChunks.push(e.data);
+    rec.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      const annule = rec && rec._annule; rec = null; clearInterval(recTimer);
+      if (annule || !recChunks.length) return;
+      const blob = new Blob(recChunks, {type: recChunks[0].type || 'audio/webm'});
+      const m = { id:uid(), dossierId:D.id, ouvertureId:recCible, kind:'audio', mime:blob.type, blob, nom:'memo', date:new Date().toISOString(), transcrire:true, note:'', envoye:false };
+      await dbPut('medias', m); MEDIAS.push(m); toast('Mémo enregistré'); rafraichir();
+    };
+    rec.start(1000); recDebut = Date.now();
+    btn.classList.add('rec'); btn.classList.remove('sec'); btn.classList.add('rouge');
+    recTimer = setInterval(() => { const s = Math.round((Date.now()-recDebut)/1000); btn.textContent = `■ Arrêter (${Math.floor(s/60)}:${String(s%60).padStart(2,'0')})`; }, 500);
+  } catch (e) { toast('Micro refusé ou indisponible'); }
+}
+function stopMemo(){ if (rec && rec.state !== "inactive") rec.stop(); }
+
+/* =================== Dictée + IA =================== */
+function blocDictee(k){
+  const c = k === 'd' ? D : O;
+  const enLigne = navigator.onLine, iaOk = !!REG.cleIA;
+  return `<div class="carte">
+    <h2>Dictée ${k==='d'?'du dossier':'de l’ouverture'}</h2>
+    <p class="muted" style="margin:0 0 8px">Dictez tout d’une traite (ou tapez). Corrigez le texte si besoin, puis « Remplir les cases ». Les cases remplies par l’IA passent en orange jusqu’à votre vérification.</p>
+    ${champ('dictee', c, {zone:1, ph: k==='d' ? 'ex. Chantier Diaz à Tarascon, gamme recouvrement, pin, pré-peinture blanche, pose comprise…' : 'ex. OF2, cuisine, largeur 1200 tableau, hauteur 1350 tableau, trois carreaux en hauteur deux en largeur par vantail…'})}
+    <div class="barre" style="margin-top:8px">
+      <button class="btn sec" id="btnDictee">🎤 Dicter</button>
+      <button class="btn ia" id="btnIA" ${enLigne&&iaOk?'':'disabled'}>✨ Remplir les cases</button>
+    </div>
+    ${!iaOk ? '<p class="muted">IA non configurée (Réglages). La dictée reste enregistrée et sera lue par Claude au bureau.</p>' : !enLigne ? '<p class="muted">Hors ligne : la dictée est gardée. « Remplir les cases » dès que le réseau revient, ou Claude la lira au bureau.</p>' : ''}
+    <div id="propIA"></div>
+  </div>`;
+}
+let reco = null;
+function brancherDictee(k){
+  const b = $('#btnDictee'), ia = $('#btnIA');
+  if (b) b.onclick = () => reco ? stopDictee() : startDictee(k, b);
+  if (ia) ia.onclick = () => remplirIA(k);
+}
+function startDictee(k, btn){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return toast('Dictée directe indisponible : utilisez le micro du clavier dans la case');
+  const c = k === 'd' ? D : O; const ta = document.querySelector(`[data-cible="${k}"] [data-f="dictee"]`);
+  reco = new SR(); reco.lang = 'fr-FR'; reco.continuous = true; reco.interimResults = true;
+  let base = (c.dictee || '').trim();
+  reco.onresult = e => {
+    let fin = '', prov = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) { const r = e.results[i]; if (r.isFinal) fin += r[0].transcript; else prov += r[0].transcript; }
+    if (fin) { base = (base ? base + ' ' : '') + fin.trim(); c.dictee = base; sauver(); }
+    if (ta) ta.value = base + (prov ? ' ' + prov : '');
+  };
+  reco.onerror = e => { toast(e.error === 'network' ? 'Dictée : pas de réseau, utilisez le micro du clavier' : 'Dictée interrompue (' + e.error + ')'); };
+  reco.onend = () => { if (reco && reco._actif) { try { reco.start(); } catch(_){} } else { reco = null; if (btn) { btn.textContent = '🎤 Dicter'; btn.classList.remove('rec','rouge'); btn.classList.add('sec'); } } };
+  reco._actif = true; reco.start();
+  btn.textContent = '■ Arrêter la dictée'; btn.classList.add('rec','rouge'); btn.classList.remove('sec');
+}
+function stopDictee(){ if (reco) { reco._actif = false; try { reco.stop(); } catch(_){} } }
+
+const SCHEMA_O = {
+  repere:'texte', piece:'texte', type:TYPES, fixes:FIXES, imposte:'booléen', forme:FORMES,
+  'cintre.type':CINTRES, 'cintre.fleche':'mm', 'cintre.flecheRef':['Tableau','Hors-tout'], 'cintre.piedDroit':'mm', 'cintre.piedDroitRef':['Tableau','Hors-tout'],
+  L:'mm', Lref:REFS, H:'mm', Href:REFS, grandJour:'booléen', carH:'entier (carreaux en hauteur PAR VANTAIL)', carL:'entier (carreaux en largeur PAR VANTAIL)',
+  sens:[...SENS_1V, ...SENS_2V], soubassement:'booléen', 'criteres.gamme':GAMMES, 'criteres.essence':'texte', 'criteres.finition':FINITIONS, 'criteres.vitrage':'texte', notes:'texte (ajouter, ne pas effacer)'
+};
+const SCHEMA_D = {
+  client:'texte', adresse:'texte', tel:'texte', email:'texte', numero:'texte', nature:'liste parmi ' + NATURES.join(', '), gamme:'texte (de préférence ' + GAMMES.join(' / ') + ')',
+  essence:'texte', finition:FINITIONS, teinte:'texte', vitrage:'texte', pose:POSES, depose:['Oui','Non','Par le client / maçon'], notes:'texte (ajouter, ne pas effacer)'
+};
+const SYSTEME = `Tu aides Térence, menuisier (Héritage Bois), à remplir une fiche de relevé de chantier à partir de sa dictée (reconnaissance vocale, parfois bruitée).
+Règles :
+- Ne remplis QUE ce qui est dit dans la dictée. N'invente rien, ne mets aucune valeur par défaut.
+- Cotes en millimètres, nombres entiers. "1 m 20" ou "un mètre vingt" = 1200 ; "120" dit pour une fenêtre = probablement 1200 mm → mets 1200 ET signale le doute.
+- Vocabulaire : OF1/OF2/OF3 = fenêtre 1/2/3 vantaux, PF = porte-fenêtre. "Cote hors-tout", "cote tableau", "dos de dormant". Carreaux TOUJOURS PAR VANTAIL : "H4 L2" ou "4 en hauteur 2 en largeur" → carH 4, carL 2. "Cintré" sans précision = Surbaissé. "Raymond" = crémone ; "Gibro" = Bros. Fixe latéral = faux ouvrant. VP = vantail principal.
+- Si la largeur et la hauteur ont des références différentes, garde-les séparées.
+- Tout ce qui ne rentre pas dans une case va dans "notes" (phrase courte).
+- Si une valeur est douteuse (bruit, chiffre incohérent), mets-la quand même si elle est probable ET explique dans "doutes".
+Réponds UNIQUEMENT par un objet JSON : {"champs": {"chemin": valeur, ...}, "doutes": ["..."]}. Les chemins et valeurs autorisés sont fournis. Pour les listes, utilise exactement une des valeurs proposées.`;
+async function remplirIA(k){
+  const c = k === 'd' ? D : O; await sauverMaintenant();
+  if (!c.dictee || !c.dictee.trim()) return toast('Dictée vide');
+  const zone = $('#propIA'); zone.innerHTML = '<p class="muted">L’IA lit la dictée…</p>';
+  const schema = k === 'd' ? SCHEMA_D : SCHEMA_O;
+  const actuel = {}; Object.keys(schema).forEach(p => { const v = getP(c, p); if (v !== '' && v != null && !(Array.isArray(v)&&!v.length)) actuel[p] = v; });
+  const contexte = k === 'o' ? `Critères généraux du dossier (ne pas recopier dans l'ouverture sauf si la dictée dit que cette ouverture est différente) : gamme ${D.gamme||'?'}, essence ${D.essence||'?'}, finition ${D.finition||'?'}.` : '';
+  const msg = `Chemins autorisés et valeurs possibles :\n${JSON.stringify(schema, null, 1)}\n\nValeurs déjà saisies (ne les change que si la dictée les corrige) :\n${JSON.stringify(actuel)}\n\n${contexte}\n\nDictée :\n"""${c.dictee}"""`;
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', { method:'POST', headers:{'content-type':'application/json','x-api-key':REG.cleIA,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({ model: REG.modeleIA, max_tokens: 1500, system: SYSTEME, messages:[{role:'user', content: msg}] }) });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error?.message || ('HTTP ' + r.status));
+    const txt = (j.content||[]).map(x=>x.text||'').join('');
+    const m = txt.match(/\{[\s\S]*\}/); if (!m) throw new Error('réponse illisible');
+    const res = JSON.parse(m[0]); proposerIA(k, res);
+  } catch (e) { zone.innerHTML = `<p class="alertes"><li>IA : ${esc(e.message)}. La dictée est gardée.</li></p>`; }
+}
+function proposerIA(k, res){
+  const c = k === 'd' ? D : O; const zone = $('#propIA');
+  const ch = res.champs || {}; const lignes = [];
+  Object.entries(ch).forEach(([p, v]) => {
+    let nv = v; if (typeof nv === 'number') nv = String(nv);
+    if (p === 'notes') { if (!nv) return; nv = (c.notes ? c.notes + '\n' : '') + nv; }
+    const av = getP(c, p);
+    if (JSON.stringify(av) === JSON.stringify(nv)) return;
+    lignes.push({p, nv, av});
+  });
+  if (!lignes.length) { zone.innerHTML = '<p class="muted">Rien de nouveau à remplir.</p>' + doutesHTML(res); return; }
+  const nom = p => ({L:'Largeur',H:'Hauteur',Lref:'Largeur en',Href:'Hauteur en',carH:'Carreaux H',carL:'Carreaux L','cintre.fleche':'Flèche','cintre.flecheRef':'Flèche en','cintre.piedDroit':'Pied droit','cintre.piedDroitRef':'Pied droit en','cintre.type':'Cintre','criteres.gamme':'Gamme (ouverture)','criteres.essence':'Essence (ouverture)','criteres.finition':'Finition (ouverture)','criteres.vitrage':'Vitrage (ouverture)',type:'Type',piece:'Pièce',repere:'Repère',notes:'Remarques',fixes:'Fixe latéral',imposte:'Imposte',forme:'Forme',sens:'Sens',grandJour:'Grand jour',soubassement:'Soubassement',client:'Client',adresse:'Adresse',tel:'Téléphone',email:'E-mail',numero:'N° dossier',nature:'Nature',gamme:'Gamme',essence:'Essence',finition:'Finition',teinte:'Teinte',vitrage:'Vitrage',pose:'Pose',depose:'Dépose'}[p] || p);
+  zone.innerHTML = `<div class="prop"><b>Proposition de l’IA — décochez ce qui est faux</b>
+    ${lignes.map((l,i) => `<label><input type="checkbox" data-pi="${i}" checked><span><b>${esc(nom(l.p))}</b> : ${esc(Array.isArray(l.nv)?l.nv.join(', '):l.nv)}${l.av&&l.p!=='notes'&&!(Array.isArray(l.av)&&!l.av.length)?` <small class="muted">(avant : ${esc(Array.isArray(l.av)?l.av.join(', '):l.av)})</small>`:''}</span></label>`).join('')}
+    ${doutesHTML(res)}
+    <div class="barre" style="margin-top:8px"><button class="btn ia" id="appIA">Appliquer</button><button class="btn sec" id="annIA">Annuler</button></div></div>`;
+  $('#annIA').onclick = () => zone.innerHTML = '';
+  $('#appIA').onclick = async () => {
+    zone.querySelectorAll('[data-pi]').forEach(cb => { if (!cb.checked) return; const l = lignes[+cb.dataset.pi];
+      let v = l.nv; if (['imposte','grandJour','soubassement'].includes(l.p)) v = v === true || v === 'true' || v === 'oui';
+      setP(c, l.p, v); if (l.p !== 'notes') c.iaChamps = [...new Set([...(c.iaChamps||[]), l.p])];
+      if (l.p.startsWith('criteres.') && c.criteres) c.criteres.idem = false; });
+    if (c === O && O.statut === 'validée') O.statut = 'modifiée';
+    await sauverMaintenant(); toast('Cases remplies : vérifiez les cases orange'); rafraichir();
+  };
+}
+const doutesHTML = r => (r.doutes && r.doutes.length) ? `<ul class="alertes" style="margin-top:8px">${r.doutes.map(d=>`<li class="info">❓ ${esc(d)}</li>`).join('')}</ul>` : '';
+
+/* =================== Export (JSON + récapitulatif lisible) =================== */
+function nomMedia(m, i){
+  const ext = (m.mime.split('/')[1]||'bin').split(';')[0].replace('jpeg','jpg').replace('quicktime','mov');
+  const o = OUVS.find(x => x.id === m.ouvertureId);
+  const pre = o ? `O${String(o.num).padStart(2,'0')}` : 'DOSSIER';
+  return `${pre}_${m.kind}_${String(i+1).padStart(2,'0')}${m.transcrire&&m.kind!=='photo'?'_A-TRANSCRIRE':''}.${ext}`;
+}
+function construireExport(){
+  const noms = new Map(); MEDIAS.forEach((m,i) => noms.set(m.id, nomMedia(m,i)));
+  const med = m => ({ fichier:'medias/'+noms.get(m.id), type:m.kind, aTranscrire: m.kind==='photo' ? false : !!m.transcrire, aAnalyser: m.kind==='photo', legende:m.note||'', date:m.date });
+  const json = { format:FORMAT, app:'HB Relevé '+VERSION, exporte:new Date().toISOString(),
+    dossier: Object.fromEntries(Object.entries(D).filter(([k]) => !['envois'].includes(k))),
+    mediasDossier: MEDIAS.filter(m=>!m.ouvertureId).map(med),
+    ouvertures: OUVS.map(o => ({...o, controles: controles(o).map(x=>x[1]), medias: MEDIAS.filter(m=>m.ouvertureId===o.id).map(med)})) };
+  const L = [];
+  L.push(`# RELEVÉ — ${D.client||'(sans nom)'}${D.test?' — TEST':''}`, '', `- Date du RDV : ${D.dateRdv||'?'} · N° : ${D.numero||'—'}`, `- Adresse : ${D.adresse||'—'} · Tél : ${D.tel||'—'} · Mail : ${D.email||'—'}`,
+    `- Nature : ${(D.nature||[]).join(', ')||'—'}`, `- Gamme : ${D.gamme||'—'} · Essence : ${D.essence||'—'} · Finition : ${D.finition||'—'} · Teinte : ${D.teinte||'—'}`,
+    `- Vitrage : ${D.vitrage||'—'} · ${D.pose||'—'} · Dépose : ${D.depose||'—'}`);
+  if (D.notes) L.push(`- Remarques : ${D.notes}`); if (D.dictee) L.push('', '> Dictée dossier : ' + D.dictee.replace(/\n/g,' '));
+  if (D.iaChamps?.length) L.push(`- ⚠ Cases dossier remplies par l’IA non vérifiées : ${D.iaChamps.join(', ')}`);
+  OUVS.forEach(o => {
+    L.push('', `## N°${o.num}${o.repere?' — '+o.repere:''} · ${o.type||'?'}${o.fixes&&o.fixes!=='Aucun'?' + fixe '+o.fixes.toLowerCase():''}${o.imposte?' + imposte':''}${o.forme==='Cintrée'?' · cintrée ('+(o.cintre.type||'?')+')':''} — ${o.statut.toUpperCase()}`);
+    if (o.piece) L.push(`- Pièce : ${o.piece}`);
+    L.push(`- Largeur : ${o.L||'?'} (${o.Lref||'réf. ?'}) · Hauteur : ${o.H||'?'} (${o.Href||'réf. ?'})`);
+    if (o.forme==='Cintrée') L.push(`- Flèche : ${o.cintre.fleche||'?'} (${o.cintre.flecheRef||'réf. ?'}) · Pied droit : ${o.cintre.piedDroit||'—'} (${o.cintre.piedDroitRef||'—'})`);
+    if (!/^Volet/.test(o.type)) L.push(`- Carreaux par vantail : ${o.grandJour?'grand jour':`H${o.carH||'?'} × L${o.carL||'?'}`}${o.soubassement?' · soubassement':''}`);
+    if (o.sens) L.push(`- Sens : ${o.sens}`);
+    L.push(`- Critères : ${o.criteres.idem?'comme le dossier':[o.criteres.gamme,o.criteres.essence,o.criteres.finition,o.criteres.vitrage].filter(Boolean).join(' · ')}`);
+    if (o.notes) L.push(`- Remarques : ${o.notes.replace(/\n/g,' / ')}`);
+    if (o.dictee) L.push(`> Dictée : ${o.dictee.replace(/\n/g,' ')}`);
+    if (o.iaChamps?.length) L.push(`- ⚠ Cases remplies par l’IA non vérifiées : ${o.iaChamps.join(', ')}`);
+    const c = controles(o); if (c.length) L.push(`- Contrôles : ${c.map(x=>x[1]).join(' ; ')}`);
+    const ms = MEDIAS.filter(m=>m.ouvertureId===o.id); if (ms.length) L.push(`- Médias : ${ms.map(m=>noms.get(m.id)).join(', ')}`);
+  });
+  return { json, md: L.join('\n'), noms };
+}
+
+/* =================== Dropbox (envoi direct) =================== */
+const enc = o => JSON.stringify(o).replace(/[\u007f-￿]/g, c => '\\u' + ('000' + c.charCodeAt(0).toString(16)).slice(-4));
+function b64url(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+const redirectURI = () => location.origin + location.pathname;
+async function connecterDropbox(){
+  if (!REG.dbxAppKey) return toast('Saisir d’abord la clé d’application Dropbox');
+  const v = b64url(crypto.getRandomValues(new Uint8Array(48)));
+  const ch = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(v)));
+  lsSet('hb-pkce', v);
+  location.href = `https://www.dropbox.com/oauth2/authorize?client_id=${encodeURIComponent(REG.dbxAppKey)}&response_type=code&code_challenge=${ch}&code_challenge_method=S256&token_access_type=offline&redirect_uri=${encodeURIComponent(redirectURI())}`;
+}
+async function retourDropbox(){
+  const q = new URLSearchParams(location.search); const code = q.get('code'); if (!code) return;
+  history.replaceState(null, '', location.pathname + '#/reglages');
+  try {
+    const r = await fetch('https://api.dropboxapi.com/oauth2/token', { method:'POST', body: new URLSearchParams({ code, grant_type:'authorization_code', code_verifier: lsGet('hb-pkce',''), client_id: REG.dbxAppKey, redirect_uri: redirectURI() }) });
+    const j = await r.json(); if (!r.ok) throw new Error(j.error_description || j.error);
+    await reg('dbxRefresh', j.refresh_token); await reg('dbxAccess', j.access_token); await reg('dbxExpire', Date.now() + (j.expires_in-60)*1000);
+    toast('Dropbox connecté');
+  } catch (e) { toast('Dropbox : ' + e.message, 5000); }
+}
+async function jetonDbx(){
+  if (REG.dbxAccess && Date.now() < REG.dbxExpire) return REG.dbxAccess;
+  const r = await fetch('https://api.dropboxapi.com/oauth2/token', { method:'POST', body: new URLSearchParams({ grant_type:'refresh_token', refresh_token: REG.dbxRefresh, client_id: REG.dbxAppKey }) });
+  const j = await r.json(); if (!r.ok) throw new Error('reconnexion Dropbox nécessaire (' + (j.error_description||j.error) + ')');
+  await reg('dbxAccess', j.access_token); await reg('dbxExpire', Date.now() + (j.expires_in-60)*1000); return j.access_token;
+}
+async function dbxRPC(route, arg){
+  const r = await fetch('https://api.dropboxapi.com/2/' + route, { method:'POST', headers:{ Authorization:'Bearer ' + await jetonDbx(), 'Content-Type':'application/json' }, body: JSON.stringify(arg) });
+  const t = await r.text(); if (!r.ok) throw new Error(route + ' : ' + t.slice(0,200)); return JSON.parse(t);
+}
+async function dbxUpload(path, blob, prog){
+  const tok = await jetonDbx(); const CH = 8*1024*1024;
+  const arg = { path, mode:'add', autorename:true, mute:true };
+  if (blob.size <= CH) {
+    const r = await fetch('https://content.dropboxapi.com/2/files/upload', { method:'POST', headers:{ Authorization:'Bearer '+tok, 'Content-Type':'application/octet-stream', 'Dropbox-API-Arg': enc(arg) }, body: blob });
+    const t = await r.text(); if (!r.ok) throw new Error('envoi ' + path + ' : ' + t.slice(0,200)); prog && prog(blob.size); return JSON.parse(t);
+  }
+  let r = await fetch('https://content.dropboxapi.com/2/files/upload_session/start', { method:'POST', headers:{ Authorization:'Bearer '+tok, 'Content-Type':'application/octet-stream', 'Dropbox-API-Arg': enc({close:false}) }, body: blob.slice(0, CH) });
+  let t = await r.text(); if (!r.ok) throw new Error('envoi (début) : ' + t.slice(0,200));
+  const sid = JSON.parse(t).session_id; let off = CH; prog && prog(CH);
+  while (blob.size - off > CH) {
+    r = await fetch('https://content.dropboxapi.com/2/files/upload_session/append_v2', { method:'POST', headers:{ Authorization:'Bearer '+await jetonDbx(), 'Content-Type':'application/octet-stream', 'Dropbox-API-Arg': enc({cursor:{session_id:sid, offset:off}, close:false}) }, body: blob.slice(off, off+CH) });
+    if (!r.ok) throw new Error('envoi (suite) : ' + (await r.text()).slice(0,200)); off += CH; prog && prog(CH);
+  }
+  r = await fetch('https://content.dropboxapi.com/2/files/upload_session/finish', { method:'POST', headers:{ Authorization:'Bearer '+await jetonDbx(), 'Content-Type':'application/octet-stream', 'Dropbox-API-Arg': enc({cursor:{session_id:sid, offset:off}, commit:arg}) }, body: blob.slice(off) });
+  t = await r.text(); if (!r.ok) throw new Error('envoi (fin) : ' + t.slice(0,200)); prog && prog(blob.size - off); return JSON.parse(t);
+}
+async function importerDepuisDropbox(){
+  try {
+    const dossier = REG.dbxRacine.replace(/\/$/,'') + '/_A IMPORTER';
+    const l = await dbxRPC('files/list_folder', {path: dossier});
+    const js = l.entries.filter(e => e['.tag']==='file' && /\.json$/i.test(e.name));
+    if (!js.length) return toast('Aucun dossier préparé dans « _A IMPORTER »', 4000);
+    let n = 0;
+    for (const e of js) {
+      const r = await fetch('https://content.dropboxapi.com/2/files/download', { method:'POST', headers:{ Authorization:'Bearer '+await jetonDbx(), 'Dropbox-API-Arg': enc({path:e.path_lower}) } });
+      if (!r.ok) continue; if (await importerJSON(await r.text(), true)) n++;
+    }
+    toast(`${n} dossier(s) importé(s)`); vueListe();
+  } catch (e) { toast('Dropbox : ' + e.message, 5000); }
+}
+
+/* =================== Import d'un dossier préparé =================== */
+async function importerJSON(txt, silencieux=false){
+  try {
+    const j = JSON.parse(txt); if (!j.dossier) throw new Error('format inconnu');
+    const exist = (await dbAll('dossiers')).find(d => d.importId && d.importId === (j.dossier.importId || j.dossier.id));
+    if (exist) { if (!silencieux) toast('Déjà importé : ' + (exist.client||'')); return false; }
+    const d = Object.assign(nouveauDossier(), j.dossier, { id: uid(), importId: j.dossier.importId || j.dossier.id || uid(), envois: [], archive:false, maj:new Date().toISOString() });
+    await dbPut('dossiers', d);
+    let n = 0;
+    for (const x of (j.ouvertures||[])) { n++; const o = Object.assign(nouvelleOuverture(d.id, x.num || n), x, { id: uid(), dossierId: d.id, statut:'en cours' });
+      o.cintre = Object.assign(nouvelleOuverture().cintre, x.cintre||{}); o.criteres = Object.assign(nouvelleOuverture().criteres, x.criteres||{}); delete o.medias; delete o.controles; await dbPut('ouvertures', o); }
+    if (!silencieux) { toast('Dossier importé'); aller('/d/' + d.id); }
+    return true;
+  } catch (e) { toast('Import impossible : ' + e.message, 4000); return false; }
+}
+$('#importFichier').onchange = async e => { const f = e.target.files[0]; if (f) await importerJSON(await f.text()); e.target.value=''; };
+
+/* =================== Zip (export sans Dropbox) =================== */
+const CRC = (() => { const t = new Uint32Array(256); for (let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1; t[n]=c>>>0; } return t; })();
+function crc32(u8){ let c = 0xFFFFFFFF; for (let i=0;i<u8.length;i++) c = CRC[(c^u8[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+async function zip(files){ // [{name, blob}] — stockage sans compression
+  const parts = [], cd = []; let off = 0; const te = new TextEncoder();
+  for (const f of files) {
+    const data = new Uint8Array(await f.blob.arrayBuffer()); const nm = te.encode(f.name); const crc = crc32(data);
+    const h = new DataView(new ArrayBuffer(30)); h.setUint32(0,0x04034b50,true); h.setUint16(4,20,true); h.setUint16(6,0x0800,true); h.setUint32(14,crc,true); h.setUint32(18,data.length,true); h.setUint32(22,data.length,true); h.setUint16(26,nm.length,true);
+    parts.push(h.buffer, nm, data);
+    const c = new DataView(new ArrayBuffer(46)); c.setUint32(0,0x02014b50,true); c.setUint16(4,20,true); c.setUint16(6,20,true); c.setUint16(8,0x0800,true); c.setUint32(16,crc,true); c.setUint32(20,data.length,true); c.setUint32(24,data.length,true); c.setUint16(28,nm.length,true); c.setUint32(42,off,true);
+    cd.push(c.buffer, nm); off += 30 + nm.length + data.length;
+  }
+  const cdLen = cd.reduce((a,b)=>a+(b.byteLength||b.length),0);
+  const e = new DataView(new ArrayBuffer(22)); e.setUint32(0,0x06054b50,true); e.setUint16(8,files.length,true); e.setUint16(10,files.length,true); e.setUint32(12,cdLen,true); e.setUint32(16,off,true);
+  return new Blob([...parts, ...cd, e.buffer], {type:'application/zip'});
+}
+
+/* =================== VUE : envoi =================== */
+function vueEnvoi(){
+  $('#titre').textContent = 'Envoyer — ' + (D.client||'dossier');
+  const nonVal = OUVS.filter(o => o.statut !== 'validée');
+  const ia = OUVS.filter(o => o.iaChamps?.length).length + (D.iaChamps?.length?1:0);
+  const aTr = MEDIAS.filter(m => m.kind!=='photo' && m.transcrire).length;
+  const taille = MEDIAS.reduce((a,m)=>a+(m.blob?.size||0),0);
+  const nonEnv = MEDIAS.filter(m => !m.envoye);
+  $('#app').innerHTML = `
+  <div class="carte">
+    <h2>Avant d’envoyer</h2>
+    <ul class="alertes">
+      ${!D.client ? '<li>Nom du client manquant</li>' : ''}
+      ${nonVal.length ? `<li>${nonVal.length} ouverture(s) non validée(s) : ${nonVal.map(o=>'n°'+o.num).join(', ')}</li>` : ''}
+      ${ia ? `<li class="info">${ia} fiche(s) avec des cases IA non vérifiées</li>` : ''}
+      ${!nonVal.length && D.client && !ia ? '<li class="info" style="background:#d9f0df;color:#1f7a3a">✓ Tout est validé</li>' : ''}
+    </ul>
+    <p class="muted">${OUVS.length} ouverture(s) · ${MEDIAS.length} média(s) (${(taille/1048576).toFixed(1)} Mo) · ${aTr} à transcrire${D.envois.length?` · déjà envoyé ${D.envois.length} fois (seuls les nouveaux médias repartent)`:''}</p>
+  </div>
+  <div class="carte">
+    <h2>Envoi direct dans Dropbox</h2>
+    ${REG.dbxRefresh ? `<p class="muted">Dossier : ${esc(REG.dbxRacine)}/${esc(dossierEnvoi())}</p>
+      ${navigator.onLine ? '' : '<p class="alertes"><li>Pas de réseau pour l’instant. Le dossier reste en sécurité sur le téléphone.</li></p>'}
+      <button class="btn bleu plein" id="goDbx" ${navigator.onLine?'':'disabled'}>Envoyer dans Dropbox (${nonEnv.length} média(s) + fiche)</button>
+      <div class="progress" style="margin-top:10px"><div id="pbar"></div></div><p class="muted" id="pmsg"></p>`
+      : '<p class="muted">Dropbox non connecté : voir Réglages. En attendant, utilisez « Partager ».</p>'}
+  </div>
+  <div class="carte">
+    <h2>Sans Dropbox direct</h2>
+    <button class="btn sec plein" id="goZip">Partager le dossier (.zip) → appli Dropbox, mail…</button>
+  </div>
+  ${D.envois.length ? `<div class="carte"><h2>Historique</h2>${D.envois.map(e=>`<div class="muted">${e.date.slice(0,16).replace('T',' ')} · ${esc(e.mode)} · ${esc(e.chemin||'')}</div>`).join('')}</div>` : ''}`;
+  if ($('#goDbx')) $('#goDbx').onclick = envoyerDropbox;
+  $('#goZip').onclick = partagerZip;
+}
+const dossierEnvoi = () => `${D.dateRdv||auj()}_${slug(D.client)}${D.test?'_TEST':''}`;
+async function envoyerDropbox(){
+  const btn = $('#goDbx'); btn.disabled = true;
+  const pb = $('#pbar'), pm = $('#pmsg');
+  try {
+    const { json, md, noms } = construireExport();
+    const base = REG.dbxRacine.replace(/\/$/,'') + '/' + dossierEnvoi();
+    const aEnv = MEDIAS.filter(m => !m.envoye);
+    const total = aEnv.reduce((a,m)=>a+m.blob.size,0) + 1; let fait = 0;
+    const prog = n => { fait += n; pb.style.width = Math.min(100, fait/total*100).toFixed(1) + '%'; };
+    for (const m of aEnv) {
+      pm.textContent = 'Envoi ' + noms.get(m.id) + '…';
+      const r = await dbxUpload(base + '/medias/' + noms.get(m.id), m.blob, prog);
+      m.envoye = true; m.cheminDbx = r.path_display; await dbPut('medias', m);
+    }
+    const st = new Date().toISOString().slice(0,16).replace(/[-:T]/g,'').replace(/^(\d{8})(\d{4})$/,'$1-$2');
+    json.medias_chemins = Object.fromEntries(MEDIAS.map(m => [noms.get(m.id), m.cheminDbx||'']));
+    pm.textContent = 'Envoi de la fiche…';
+    await dbxUpload(`${base}/RELEVE_${st}.json`, new Blob([JSON.stringify(json, null, 1)], {type:'application/json'}));
+    await dbxUpload(`${base}/RELEVE_${st}.md`, new Blob([md], {type:'text/markdown'}));
+    pb.style.width = '100%';
+    D.envois.push({date:new Date().toISOString(), mode:'Dropbox', chemin: base}); await sauverMaintenant();
+    pm.textContent = '✓ Envoyé. Dites à Claude : « relevé ' + (D.client||'') + ' déposé ».';
+    toast('Envoyé dans Dropbox', 4000);
+  } catch (e) { pm.textContent = '✕ ' + e.message + ' — rien n’est perdu, réessayez.'; btn.disabled = false; }
+}
+async function partagerZip(){
+  try {
+    toast('Préparation du zip…');
+    const { json, md, noms } = construireExport();
+    const files = [ {name:'RELEVE.json', blob:new Blob([JSON.stringify(json,null,1)])}, {name:'RELEVE.md', blob:new Blob([md])},
+      ...MEDIAS.map(m => ({name:'medias/'+noms.get(m.id), blob:m.blob})) ];
+    const z = await zip(files); const nom = dossierEnvoi() + '.zip';
+    const f = new File([z], nom, {type:'application/zip'});
+    if (navigator.canShare && navigator.canShare({files:[f]})) {
+      await navigator.share({files:[f], title: nom});
+    } else { const a = document.createElement('a'); a.href = URL.createObjectURL(z); a.download = nom; a.click(); }
+    D.envois.push({date:new Date().toISOString(), mode:'Partage zip', chemin:nom}); await sauverMaintenant();
+  } catch (e) { if (e.name !== 'AbortError') toast('Partage : ' + e.message, 4000); }
+}
+
+/* =================== VUE : réglages =================== */
+function vueReglages(){
+  D = null; O = null;
+  $('#titre').textContent = 'Réglages';
+  $('#app').innerHTML = `
+  <div class="carte">
+    <h2>IA (Claude) — facultatif</h2>
+    <p class="muted">Sert à « Remplir les cases » depuis la dictée, quand il y a du réseau. Clé API à créer par vous sur console.anthropic.com (facturée à l’usage, à part de l’abonnement). Elle reste sur ce téléphone.</p>
+    <label class="l">Clé API</label><input id="rCle" type="password" value="${esc(REG.cleIA)}" autocomplete="off" placeholder="sk-ant-…">
+    <label class="l">Modèle</label><input id="rMod" value="${esc(REG.modeleIA)}">
+    <button class="btn sec plein" id="rTestIA" style="margin-top:8px">Tester l’IA</button>
+  </div>
+  <div class="carte">
+    <h2>Dropbox — envoi direct</h2>
+    <p class="muted">Clé d’application (« App key ») de l’appli Dropbox créée pour HB Relevé. Puis « Connecter » : vous vous identifiez vous-même chez Dropbox.</p>
+    <label class="l">App key</label><input id="rDbx" value="${esc(REG.dbxAppKey)}" autocomplete="off">
+    <label class="l">Dossier de dépôt</label><input id="rRac" value="${esc(REG.dbxRacine)}">
+    <div class="barre" style="margin-top:8px">
+      <button class="btn bleu" id="rCon">${REG.dbxRefresh?'Reconnecter':'Connecter'} Dropbox</button>
+      ${REG.dbxRefresh?'<button class="btn sec" id="rDec">Déconnecter</button>':''}
+    </div>
+    <p class="muted">Adresse de retour à déclarer dans l’appli Dropbox : <b>${esc(redirectURI())}</b></p>
+    <p class="muted">${REG.dbxRefresh ? '✓ Connecté' : 'Non connecté'}</p>
+  </div>
+  <div class="carte">
+    <h2>Stockage</h2>
+    <p class="muted" id="rSto">…</p>
+  </div>`;
+  const s = async () => { await reg('cleIA', $('#rCle').value.trim()); await reg('modeleIA', $('#rMod').value.trim() || 'claude-sonnet-5-5'); await reg('dbxAppKey', $('#rDbx').value.trim()); await reg('dbxRacine', $('#rRac').value.trim() || '/_HERITAGE BOIS SAS/RELEVES APP'); };
+  ['rCle','rMod','rDbx','rRac'].forEach(id => $('#'+id).onchange = s);
+  $('#rCon').onclick = async () => { await s(); connecterDropbox(); };
+  if ($('#rDec')) $('#rDec').onclick = async () => { await reg('dbxRefresh',''); await reg('dbxAccess',''); vueReglages(); };
+  $('#rTestIA').onclick = async () => { await s();
+    try { const r = await fetch('https://api.anthropic.com/v1/messages', { method:'POST', headers:{'content-type':'application/json','x-api-key':REG.cleIA,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}, body: JSON.stringify({model:REG.modeleIA, max_tokens:20, messages:[{role:'user',content:'Réponds juste OK'}]}) });
+      const j = await r.json(); toast(r.ok ? '✓ IA opérationnelle' : 'IA : ' + (j.error?.message||r.status), 5000); } catch (e) { toast('IA : ' + e.message, 5000); } };
+  if (navigator.storage?.estimate) navigator.storage.estimate().then(async e => {
+    const p = navigator.storage.persisted ? await navigator.storage.persisted() : false;
+    $('#rSto').textContent = `${(e.usage/1048576).toFixed(1)} Mo utilisés · ${p ? 'stockage protégé (le téléphone ne l’effacera pas)' : 'stockage non protégé : installez l’app sur l’écran d’accueil'}`;
+  });
+}
+
+/* =================== Réseau, démarrage =================== */
+function majReseau(){ const r = $('#reseau'); r.textContent = navigator.onLine ? 'en ligne' : 'hors ligne'; r.className = navigator.onLine ? 'on' : ''; }
+window.addEventListener('online', () => { majReseau(); if (/^#\/(d|o|envoi)\//.test(location.hash)) rafraichir(); });
+window.addEventListener('offline', majReseau);
+(async function demarrer(){
+  try {
+    await ouvrirDB(); await chargerReglages(); majReseau();
+    if (navigator.storage?.persist) navigator.storage.persist().catch(()=>{});
+    if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+    await retourDropbox();
+    route();
+  } catch (e) { $('#app').innerHTML = `<div class="carte"><b>Démarrage impossible :</b> ${esc(e.message)}</div>`; }
+})();
+</script>
+</body>
+</html>
