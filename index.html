@@ -92,7 +92,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--bois2);padding:6px 0}
    HB Relevé — Héritage Bois — relevé de chantier hors ligne
    Version 0.1 (17/11/2026). Données stockées sur le téléphone (IndexedDB).
    ===================================================================== */
-const VERSION = '0.1';
+const VERSION = '0.2';
 const FORMAT = 'hb-releve-1';
 
 /* ---------- Listes (vocabulaire Térence, Synthèse § 2) ---------- */
@@ -109,6 +109,7 @@ const FORMES = ['Droite','Cintrée'];
 const CINTRES = ['Surbaissé','Plein cintre','Anse de panier'];
 const SENS_1V = ['Tirant gauche','Tirant droit'];
 const SENS_2V = ['VP à droite','VP à gauche'];
+const BAS = ['Pièce d’appui','Seuil alu'];
 
 /* ---------- Petits outils ---------- */
 const $ = (s, r=document) => r.querySelector(s);
@@ -165,7 +166,7 @@ function nouveauDossier(){
 function nouvelleOuverture(dossierId, num){
   return { id:uid(), dossierId, num, repere:'', piece:'', type:'', fixes:'Aucun', imposte:false, forme:'Droite',
     cintre:{type:'', fleche:'', flecheRef:'', piedDroit:'', piedDroitRef:''},
-    L:'', Lref:'', H:'', Href:'', grandJour:false, carH:'', carL:'', sens:'', soubassement:false,
+    L:'', Lref:'', H:'', Href:'', grandJour:false, carH:'', carL:'', sens:'', soubassement:false, soubH:'', bas:'',
     criteres:{idem:true, gamme:'', essence:'', finition:'', vitrage:''},
     notes:'', dictee:'', statut:'en cours', iaChamps:[], maj:new Date().toISOString() };
 }
@@ -191,6 +192,12 @@ function controles(o){
     if (o.cintre.fleche && H && +o.cintre.fleche >= H) a.push(['err','Flèche ≥ hauteur : impossible']);
   }
   if (/^(OF|PF|Porte)/.test(t) && !o.grandJour && (!o.carH || !o.carL)) a.push(['info','Carreaux par vantail non renseignés (ou cocher Grand jour)']);
+  if (o.soubassement) {
+    if (!o.soubH) a.push(['err','Soubassement : hauteur manquante']);
+    else if (H && +o.soubH >= H) a.push(['err','Soubassement ≥ hauteur : impossible']);
+    else if (+o.soubH < 200 || (H && +o.soubH > H*0.7)) a.push(['info',`Soubassement ${o.soubH} mm : vérifier`]);
+    if (!o.bas) a.push(['info','Soubassement : préciser pièce d’appui ou seuil alu']);
+  }
   if (o.Lref && o.Href && o.Lref !== o.Href) a.push(['info',`Largeur en ${o.Lref.toLowerCase()}, hauteur en ${o.Href.toLowerCase()} : voulu ?`]);
   if (o.iaChamps && o.iaChamps.length) a.push(['info',`${o.iaChamps.length} case(s) remplie(s) par l’IA à vérifier (en orange)`]);
   return a;
@@ -407,7 +414,10 @@ function vueOuverture(){
       <div style="padding-top:28px;font-size:22px">×</div>
       <div><label class="l">L (en largeur)</label><div class="step"><button data-step="carL" data-d="-1">−</button>${champ('carL', O, {num:1})}<button data-step="carL" data-d="1">＋</button></div></div>
     </div>`}
-    <label class="l" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="soub" style="width:22px;height:22px" ${O.soubassement?'checked':''}> Soubassement (panneau)</label>`}
+    <label class="l" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="soub" style="width:22px;height:22px" ${O.soubassement?'checked':''}> Soubassement (panneau)</label>
+    ${O.soubassement ? `<label class="l">Hauteur de soubassement (mm)</label>${champ('soubH', O, {num:1, cote:1, ph:'soubassement'}).replace('data-f','data-live="1" data-f')}
+      <p class="muted" style="margin:4px 0 0">Du bas de la menuiserie (dessous pièce d’appui ou seuil alu du dormant) au dessus de la traverse intermédiaire = début du clair de vitrage.</p>
+      <label class="l">Bas du dormant</label>${chips('bas', BAS, O)}` : ''}`}
     ${nv === 1 ? `<label class="l">Sens (vue intérieure)</label>${chips('sens', SENS_1V, O)}` : nv >= 2 ? `<label class="l">Sens (vue intérieure)</label>${chips('sens', SENS_2V, O)}` : ''}
   </div>
   <div class="carte">
@@ -585,7 +595,7 @@ const SCHEMA_O = {
   repere:'texte', piece:'texte', type:TYPES, fixes:FIXES, imposte:'booléen', forme:FORMES,
   'cintre.type':CINTRES, 'cintre.fleche':'mm', 'cintre.flecheRef':['Tableau','Hors-tout'], 'cintre.piedDroit':'mm', 'cintre.piedDroitRef':['Tableau','Hors-tout'],
   L:'mm', Lref:REFS, H:'mm', Href:REFS, grandJour:'booléen', carH:'entier (carreaux en hauteur PAR VANTAIL)', carL:'entier (carreaux en largeur PAR VANTAIL)',
-  sens:[...SENS_1V, ...SENS_2V], soubassement:'booléen', 'criteres.gamme':GAMMES, 'criteres.essence':'texte', 'criteres.finition':FINITIONS, 'criteres.vitrage':'texte', notes:'texte (ajouter, ne pas effacer)'
+  sens:[...SENS_1V, ...SENS_2V], soubassement:'booléen', soubH:'mm (hauteur de soubassement)', bas:BAS, 'criteres.gamme':GAMMES, 'criteres.essence':'texte', 'criteres.finition':FINITIONS, 'criteres.vitrage':'texte', notes:'texte (ajouter, ne pas effacer)'
 };
 const SCHEMA_D = {
   client:'texte', adresse:'texte', tel:'texte', email:'texte', numero:'texte', nature:'liste parmi ' + NATURES.join(', '), gamme:'texte (de préférence ' + GAMMES.join(' / ') + ')',
@@ -596,6 +606,7 @@ Règles :
 - Ne remplis QUE ce qui est dit dans la dictée. N'invente rien, ne mets aucune valeur par défaut.
 - Cotes en millimètres, nombres entiers. "1 m 20" ou "un mètre vingt" = 1200 ; "120" dit pour une fenêtre = probablement 1200 mm → mets 1200 ET signale le doute.
 - Vocabulaire : OF1/OF2/OF3 = fenêtre 1/2/3 vantaux, PF = porte-fenêtre. "Cote hors-tout", "cote tableau", "dos de dormant". Carreaux TOUJOURS PAR VANTAIL : "H4 L2" ou "4 en hauteur 2 en largeur" → carH 4, carL 2. "Cintré" sans précision = Surbaissé. "Raymond" = crémone ; "Gibro" = Bros. Fixe latéral = faux ouvrant. VP = vantail principal.
+- Hauteur de soubassement (soubH) = du bas de la menuiserie (dessous de la pièce d'appui ou du seuil alu du dormant) jusqu'au dessus de la traverse intermédiaire, là où commence le clair de vitrage. Si une hauteur de soubassement est dite : soubassement = true.
 - Si la largeur et la hauteur ont des références différentes, garde-les séparées.
 - Tout ce qui ne rentre pas dans une case va dans "notes" (phrase courte).
 - Si une valeur est douteuse (bruit, chiffre incohérent), mets-la quand même si elle est probable ET explique dans "doutes".
@@ -629,7 +640,7 @@ function proposerIA(k, res){
     lignes.push({p, nv, av});
   });
   if (!lignes.length) { zone.innerHTML = '<p class="muted">Rien de nouveau à remplir.</p>' + doutesHTML(res); return; }
-  const nom = p => ({L:'Largeur',H:'Hauteur',Lref:'Largeur en',Href:'Hauteur en',carH:'Carreaux H',carL:'Carreaux L','cintre.fleche':'Flèche','cintre.flecheRef':'Flèche en','cintre.piedDroit':'Pied droit','cintre.piedDroitRef':'Pied droit en','cintre.type':'Cintre','criteres.gamme':'Gamme (ouverture)','criteres.essence':'Essence (ouverture)','criteres.finition':'Finition (ouverture)','criteres.vitrage':'Vitrage (ouverture)',type:'Type',piece:'Pièce',repere:'Repère',notes:'Remarques',fixes:'Fixe latéral',imposte:'Imposte',forme:'Forme',sens:'Sens',grandJour:'Grand jour',soubassement:'Soubassement',client:'Client',adresse:'Adresse',tel:'Téléphone',email:'E-mail',numero:'N° dossier',nature:'Nature',gamme:'Gamme',essence:'Essence',finition:'Finition',teinte:'Teinte',vitrage:'Vitrage',pose:'Pose',depose:'Dépose'}[p] || p);
+  const nom = p => ({L:'Largeur',H:'Hauteur',Lref:'Largeur en',Href:'Hauteur en',carH:'Carreaux H',carL:'Carreaux L','cintre.fleche':'Flèche','cintre.flecheRef':'Flèche en','cintre.piedDroit':'Pied droit','cintre.piedDroitRef':'Pied droit en','cintre.type':'Cintre','criteres.gamme':'Gamme (ouverture)','criteres.essence':'Essence (ouverture)','criteres.finition':'Finition (ouverture)','criteres.vitrage':'Vitrage (ouverture)',soubH:'Hauteur de soubassement',bas:'Bas du dormant',type:'Type',piece:'Pièce',repere:'Repère',notes:'Remarques',fixes:'Fixe latéral',imposte:'Imposte',forme:'Forme',sens:'Sens',grandJour:'Grand jour',soubassement:'Soubassement',client:'Client',adresse:'Adresse',tel:'Téléphone',email:'E-mail',numero:'N° dossier',nature:'Nature',gamme:'Gamme',essence:'Essence',finition:'Finition',teinte:'Teinte',vitrage:'Vitrage',pose:'Pose',depose:'Dépose'}[p] || p);
   zone.innerHTML = `<div class="prop"><b>Proposition de l’IA — décochez ce qui est faux</b>
     ${lignes.map((l,i) => `<label><input type="checkbox" data-pi="${i}" checked><span><b>${esc(nom(l.p))}</b> : ${esc(Array.isArray(l.nv)?l.nv.join(', '):l.nv)}${l.av&&l.p!=='notes'&&!(Array.isArray(l.av)&&!l.av.length)?` <small class="muted">(avant : ${esc(Array.isArray(l.av)?l.av.join(', '):l.av)})</small>`:''}</span></label>`).join('')}
     ${doutesHTML(res)}
@@ -671,7 +682,8 @@ function construireExport(){
     if (o.piece) L.push(`- Pièce : ${o.piece}`);
     L.push(`- Largeur : ${o.L||'?'} (${o.Lref||'réf. ?'}) · Hauteur : ${o.H||'?'} (${o.Href||'réf. ?'})`);
     if (o.forme==='Cintrée') L.push(`- Flèche : ${o.cintre.fleche||'?'} (${o.cintre.flecheRef||'réf. ?'}) · Pied droit : ${o.cintre.piedDroit||'—'} (${o.cintre.piedDroitRef||'—'})`);
-    if (!/^Volet/.test(o.type)) L.push(`- Carreaux par vantail : ${o.grandJour?'grand jour':`H${o.carH||'?'} × L${o.carL||'?'}`}${o.soubassement?' · soubassement':''}`);
+    if (!/^Volet/.test(o.type)) L.push(`- Carreaux par vantail : ${o.grandJour?'grand jour':`H${o.carH||'?'} × L${o.carL||'?'}`}`);
+    if (o.soubassement) L.push(`- Soubassement : ${o.soubH||'?'} mm, du bas de la menuiserie (dessous ${o.bas?o.bas.toLowerCase():'pièce d’appui / seuil ?'}) au dessus de la traverse intermédiaire (début du clair de vitrage)`);
     if (o.sens) L.push(`- Sens : ${o.sens}`);
     L.push(`- Critères : ${o.criteres.idem?'comme le dossier':[o.criteres.gamme,o.criteres.essence,o.criteres.finition,o.criteres.vitrage].filter(Boolean).join(' · ')}`);
     if (o.notes) L.push(`- Remarques : ${o.notes.replace(/\n/g,' / ')}`);
