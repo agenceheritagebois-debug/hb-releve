@@ -1,6 +1,6 @@
 // HB Relevé — fonctionnement hors ligne
-const CACHE = 'hb-releve-v0.7';
-const FICHIERS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE = 'hb-releve-v0.8';
+const FICHIERS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './img/logo.png', './fonts/inter-latin-400-normal.woff2', './fonts/inter-latin-500-normal.woff2', './fonts/inter-latin-600-normal.woff2', './fonts/inter-latin-700-normal.woff2'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FICHIERS)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {

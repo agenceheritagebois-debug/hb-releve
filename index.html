@@ -3,123 +3,127 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#5b3a1e">
+<meta name="theme-color" content="#ffffff">
 <title>HB Relevé</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <style>
-:root{--bois:#5b3a1e;--bois2:#8a5a2b;--fond:#f6f1ea;--carte:#fff;--txt:#1d1a16;--gris:#6b645c;--ligne:#ddd3c6;--ok:#1f7a3a;--alerte:#b3261e;--ia:#c26a00;--bleu:#1f5f9e}
+/* ===== Style « carnet » Héritage Bois (plans et devis) : fond blanc, Inter, filets noirs, étiquettes de cartouche, rouge = à vérifier ===== */
+@font-face{font-family:'Inter';font-weight:400;font-display:swap;src:url(fonts/inter-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-weight:500;font-display:swap;src:url(fonts/inter-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-weight:600;font-display:swap;src:url(fonts/inter-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-weight:700;font-display:swap;src:url(fonts/inter-latin-700-normal.woff2) format('woff2')}
+:root{--encre:#1b1b1b;--trait:#1b1b1b;--filet:#d6d6d6;--gris:#8a8a8a;--gris2:#5f5f5f;--fond:#f3f3f1;--carte:#fff;--rouge:#c62828;--ok:#2e7d32;--beige:#e9dcc2;--sans:'Inter',system-ui,Roboto,sans-serif;
+  --bois:var(--encre);--bois2:var(--encre);--txt:var(--encre);--ia:var(--rouge);--bleu:var(--encre);--ligne:var(--filet);--alerte:var(--rouge)}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--fond);color:var(--txt);font:17px/1.35 system-ui,-apple-system,Roboto,sans-serif}
-header{position:sticky;top:0;z-index:5;background:var(--bois);color:#fff;display:flex;align-items:center;gap:8px;padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top))}
-header h1{font-size:18px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-header button{background:transparent;border:0;color:#fff;font-size:22px;padding:4px 8px;min-width:40px}
-#reseau{font-size:12px;padding:3px 8px;border-radius:10px;background:#3a2412}
-#reseau.on{background:#2e7d32}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--fond);color:var(--encre);font:16px/1.4 var(--sans);-webkit-font-smoothing:antialiased}
+header{position:sticky;top:0;z-index:5;background:#fff;color:var(--encre);display:flex;align-items:center;gap:10px;padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top));border-bottom:2px solid var(--trait)}
+header .logo{height:42px;display:block;padding-right:10px;border-right:1px solid var(--filet)}
+header h1{font:600 18px/1.15 var(--sans);margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header button{background:transparent;border:0;color:var(--encre);font-size:22px;padding:4px 8px;min-width:40px}
+#reseau{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border:1px solid var(--filet);color:var(--gris)}
+#reseau.on{color:var(--ok);border-color:#a5cfa8}
 main{padding:12px;padding-bottom:130px;max-width:760px;margin:0 auto}
-.carte{background:var(--carte);border:1px solid var(--ligne);border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-.carte h2{font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--bois2);margin:0 0 6px;padding-bottom:8px;border-bottom:1px solid #efe6da}
-label.l{display:block;font-size:13px;font-weight:600;color:var(--gris);margin:14px 0 6px}
-.coche{display:flex;gap:10px;align-items:center;font-size:16px;margin:14px 0 4px;color:var(--txt)}
-.coche input{width:24px;height:24px;flex:none}
-input,textarea,select{width:100%;font:inherit;padding:10px;border:1px solid var(--ligne);border-radius:8px;background:#fff;color:var(--txt)}
-textarea{min-height:70px;resize:vertical}
-input.cote{font-size:28px;font-weight:700;text-align:center;letter-spacing:.03em;padding:8px}
-.ia-flag{border-color:var(--ia)!important;box-shadow:0 0 0 2px #f5c58a}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
+.carte{background:var(--carte);border:1.5px solid var(--trait);padding:14px;margin-bottom:12px}
+.carte h2{font:600 16px/1.2 var(--sans);color:var(--encre);margin:-14px -14px 10px;padding:9px 14px;border-bottom:1px solid var(--trait);display:flex;justify-content:space-between;align-items:baseline}
+label.l{display:block;font-size:10.5px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--gris);margin:14px 0 6px}
+.coche{display:flex;gap:10px;align-items:center;font-size:16px;margin:14px 0 4px;color:var(--encre)}
+.coche input{width:24px;height:24px;flex:none;accent-color:var(--encre)}
+input,textarea,select{width:100%;font:500 16px/1.3 var(--sans);padding:11px 12px;border:1px solid #bdbdbd;border-radius:0;background:#fff;color:var(--encre)}
+input:focus,textarea:focus{outline:2px solid var(--encre);outline-offset:-1px}
+textarea{min-height:76px;resize:vertical;font-weight:400}
+input.cote{font:600 30px/1.1 var(--sans);text-align:center;letter-spacing:.02em;padding:9px;font-variant-numeric:tabular-nums}
+.ia-flag{border-color:var(--rouge)!important;color:var(--rouge);box-shadow:0 0 0 1px var(--rouge)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
 .chips.g4{display:grid;grid-template-columns:repeat(4,1fr)}
 .chips.g3{display:grid;grid-template-columns:repeat(3,1fr)}
 .chips.g2{display:grid;grid-template-columns:repeat(2,1fr)}
 .chips.g4 .chip,.chips.g3 .chip,.chips.g2 .chip{padding:10px 4px;text-align:center}
-.chip{border:1px solid var(--ligne);background:#fff;border-radius:10px;padding:10px 13px;font:inherit;font-size:15px;color:var(--txt);min-height:44px;line-height:1.15}
-.chip.on{background:var(--bois);border-color:var(--bois);color:#fff}
-.chip.ia{border-color:var(--ia);box-shadow:0 0 0 2px #f5c58a}
+.chip{border:1px solid #bdbdbd;background:#fff;border-radius:0;padding:10px 12px;font:500 15px/1.15 var(--sans);color:var(--encre);min-height:46px}
+.chip.on{background:var(--encre);border-color:var(--encre);color:#fff}
+.chip.ia{background:var(--rouge);border-color:var(--rouge)}
 .ligne2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .ligne3{display:grid;grid-template-columns:1fr;gap:4px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:13px 16px;font:inherit;font-weight:600;background:var(--bois);color:#fff;min-height:48px}
-.btn.sec{background:#efe6da;color:var(--bois)}
-.btn.vert{background:var(--ok)}
-.btn.rouge{background:var(--alerte)}
-.btn.bleu{background:var(--bleu)}
-.btn.ia{background:var(--ia)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1.5px solid var(--encre);border-radius:0;padding:12px 14px;font:600 15px/1.1 var(--sans);background:var(--encre);color:#fff;min-height:50px}
+.btn.sec{background:#fff;color:var(--encre)}
+.btn.vert{background:var(--ok);border-color:var(--ok)}
+.btn.rouge{background:var(--rouge);border-color:var(--rouge)}
+.btn.bleu{background:var(--encre)}
+.btn.ia{background:#fff;color:var(--rouge);border-color:var(--rouge)}
 .btn.plein{width:100%}
-.btn:disabled{opacity:.45}
+.btn:disabled{opacity:.35}
 .barre{display:flex;gap:8px;flex-wrap:wrap}
 .barre .btn{flex:1}
-.item{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--ligne);border-radius:10px;background:#fff;margin-bottom:8px}
+/* listes façon tableau de plan */
+.item{display:flex;align-items:center;gap:10px;padding:12px 2px;border:0;border-bottom:1px solid var(--filet);background:#fff;margin:0}
+.item:last-of-type{border-bottom:0}
 .item .t{flex:1;min-width:0}
-.item .t b{display:block}
-.item .t small{color:var(--gris)}
-.badge{font-size:12px;padding:3px 8px;border-radius:10px;background:#eee;white-space:nowrap}
-.badge.ok{background:#d9f0df;color:var(--ok)}
-.badge.enc{background:#fde7c8;color:#8a4b00}
-.badge.env{background:#dbe8f7;color:var(--bleu)}
+.item .t b{display:block;font-weight:600}
+.item .t small{color:var(--gris2);font-size:13.5px}
+.badge{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border:1px solid currentColor;white-space:nowrap}
+.badge.ok{color:var(--ok)}
+.badge.enc{color:var(--rouge)}
+.badge.env{color:var(--gris2)}
 .alertes{margin:0;padding:0;list-style:none}
-.alertes li{background:#fdecea;color:var(--alerte);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:15px}
-.alertes li.info{background:#fff4e0;color:#8a4b00}
+.alertes li{border-left:3px solid var(--rouge);background:#fdf1f1;color:var(--rouge);padding:8px 10px;margin-bottom:6px;font-size:14.5px}
+.alertes li.info{border-left-color:var(--gris);background:#f6f6f4;color:var(--gris2)}
 .medias{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-.media{border:1px solid var(--ligne);border-radius:10px;overflow:hidden;background:#fff;font-size:14px}
+.media{border:1px solid var(--filet);background:#fff;font-size:14px}
 .media img,.media video{width:100%;height:110px;object-fit:cover;display:block;background:#222}
 .media audio{width:100%}
 .media .c{padding:6px 8px}
 .media label{display:flex;gap:6px;align-items:center}
-.media input[type=checkbox]{width:22px;height:22px}
-.fab{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom));background:var(--fond);border-top:1px solid var(--ligne);box-shadow:0 -4px 12px rgba(0,0,0,.06);display:flex;gap:8px;max-width:760px;margin:0 auto}
-.fab .btn{flex:1;padding:12px 8px;font-size:15px}
-details.pli{padding:0}
-details.pli>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px;cursor:pointer}
-details.pli>summary::-webkit-details-marker{display:none}
-details.pli>summary .tt{flex:1;min-width:0}
-details.pli>summary b{display:block;font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--bois2)}
-details.pli>summary small{display:block;color:var(--gris);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-details.pli>summary::after{content:'▾';font-size:20px;color:var(--bois2);transition:transform .15s}
-details.pli:not([open])>summary::after{transform:rotate(-90deg)}
-details.pli>.contenu{padding:0 14px 14px;border-top:1px solid #efe6da}
-details.pli .carte{border:0;padding:0;margin:0;box-shadow:none}
-details.pli .carte h2{display:none}
+.media input[type=checkbox]{width:22px;height:22px;accent-color:var(--encre)}
+.fab{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:8px 10px;padding-bottom:max(8px,env(safe-area-inset-bottom));background:#fff;border-top:2px solid var(--trait);display:flex;gap:6px;max-width:760px;margin:0 auto}
+.fab .btn{flex:1;padding:12px 6px;font-size:15px}
 .rec{animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.55}}
-.muted{color:var(--gris);font-size:14px}
-.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;z-index:40;font-size:15px;max-width:90%;text-align:center}
-details summary{cursor:pointer;font-weight:600;color:var(--bois2);padding:6px 0}
-.prop{border:1px solid var(--ia);border-radius:10px;padding:10px;background:#fffaf2;margin-top:10px}
+.muted{color:var(--gris);font-size:13.5px}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--encre);color:#fff;padding:10px 16px;z-index:40;font-size:15px;max-width:90%;text-align:center}
+details summary{cursor:pointer;font-weight:600;color:var(--encre);padding:6px 0}
+.prop{border:1.5px solid var(--rouge);padding:11px;background:#fff;margin-top:10px}
 .prop label{display:flex;gap:8px;align-items:flex-start;padding:4px 0}
 .prop input{width:22px;height:22px;flex:none}
-.progress{height:10px;background:#eee;border-radius:6px;overflow:hidden}
-.progress div{height:100%;background:var(--bleu);width:0}
+.progress{height:8px;border:1px solid var(--encre);background:#fff}
+.progress div{height:100%;background:var(--encre);width:0}
 .step{display:grid;grid-template-columns:110px 52px 1fr 52px;gap:8px;align-items:center;margin-top:8px}
 .step span{font-weight:600}
-.step button{width:52px;height:52px;font-size:26px;border-radius:10px;border:1px solid var(--ligne);background:#fff;color:var(--txt)}
-.step input{text-align:center;font-size:24px;font-weight:700;min-width:0;padding:8px}
+.step button{width:52px;height:52px;font-size:26px;border-radius:0;border:1.5px solid var(--encre);background:#fff;color:var(--encre)}
+.step input{text-align:center;font-size:24px;font-weight:600;min-width:0;padding:8px}
 .aide{color:var(--gris);font-size:13px;margin:6px 0 0}
+a{color:var(--encre)}
+/* cartouche (en tête de dossier) */
+.cartouche{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--trait);background:#fff;margin-bottom:12px}
+.cartouche div{padding:6px 10px 7px;border-right:1px solid var(--trait);border-bottom:1px solid var(--trait);min-width:0}
+.cartouche div:nth-child(2n){border-right:0}
+.cartouche div.large{grid-column:1/-1;border-right:0}
+.cartouche div:nth-last-child(-n+2){border-bottom:0}
+.cartouche small{display:block;font-size:9.5px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--gris)}
+.cartouche b{display:block;font-weight:500;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.titreplan{background:#fff;border:1.5px solid var(--trait);display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:12px}
+.titreplan img{height:56px;padding-right:12px;border-right:1px solid var(--filet)}
+.titreplan h2{font:600 20px/1.2 var(--sans);margin:0}
+.titreplan p{margin:3px 0 0;color:var(--gris);font-size:13px}
 /* appareil photo intégré */
-#recbar{position:fixed;left:8px;right:8px;top:calc(56px + env(safe-area-inset-top));z-index:30;background:#b3261e;color:#fff;border-radius:14px;padding:10px 14px;box-shadow:0 4px 14px rgba(0,0,0,.25);animation:none}
-#recbar b{animation:pulse 1s infinite}
-#recbar #recTxt{font-size:15px;margin:4px 0;max-height:4.5em;overflow:hidden}
-#recbar small{opacity:.85}
-#cam{position:fixed;inset:0;z-index:50;background:#000;display:flex;flex-direction:column}
-#cam video{flex:1;width:100%;object-fit:contain;min-height:0;background:#000;touch-action:none}
-#cam .zoom{position:absolute;left:0;right:0;bottom:150px;display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 20px}
-#cam .zoom .presets{display:flex;gap:10px}
-#cam .zoom .presets button{min-width:48px;height:48px;border-radius:24px;border:0;background:rgba(0,0,0,.55);color:#fff;font:inherit;font-weight:700;font-size:15px}
-#cam .zoom .presets button.on{background:#fff;color:#000}
-#cam .zoom input[type=range]{width:100%;max-width:420px;accent-color:#fff;border:0;background:transparent;padding:0}
-#cam .lens{width:56px;height:56px;border-radius:50%;border:2px solid #fff;background:rgba(255,255,255,.12);color:#fff;font-size:22px}
-#cam .haut{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:12px;padding-top:max(12px,env(safe-area-inset-top));color:#fff;background:linear-gradient(rgba(0,0,0,.55),transparent)}
-#cam .haut button{background:rgba(0,0,0,.45);color:#fff;border:0;border-radius:20px;padding:10px 16px;font:inherit;font-weight:600}
-#cam .bas{display:flex;justify-content:space-around;align-items:center;padding:18px 10px;padding-bottom:max(18px,env(safe-area-inset-bottom));background:#000}
-#cam .declic{width:78px;height:78px;border-radius:50%;border:5px solid #fff;background:#fff;box-shadow:inset 0 0 0 4px #000}
-#cam .rec{width:64px;height:64px;border-radius:50%;border:4px solid #fff;background:#d32f2f;color:#fff;font-weight:700}
-#cam .rec.on{border-radius:14px;animation:pulse 1s infinite}
-#cam .lib{color:#fff;font-size:13px;text-align:center;width:70px}
-#cam .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .15s}
-#cam .chrono{position:absolute;top:70px;left:50%;transform:translateX(-50%);background:#d32f2f;color:#fff;padding:4px 12px;border-radius:12px;font-weight:700}
+details.pli{padding:0}
+details.pli>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer}
+details.pli>summary::-webkit-details-marker{display:none}
+details.pli>summary .tt{flex:1;min-width:0}
+details.pli>summary b{display:block;font-size:10px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--gris)}
+details.pli>summary small{display:block;color:var(--encre);font-size:15px;font-weight:500;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+details.pli>summary::after{content:'＋';font-size:18px;color:var(--encre)}
+details.pli[open]>summary::after{content:'−'}
+details.pli[open]>summary{border-bottom:1px solid var(--trait)}
+details.pli>.contenu{padding:0 14px 14px}
+details.pli .carte{border:0;padding:0;margin:0;background:transparent}
+details.pli .carte h2{display:none}
 </style>
 </head>
 <body>
 <header>
   <button id="retour" aria-label="Retour" hidden>←</button>
-  <h1 id="titre">HB Relevé</h1>
+  <img class="logo" id="logo" src="img/logo.png" alt="Héritage Bois"><h1 id="titre">HB Relevé</h1>
   <span id="reseau">hors ligne</span>
   <button id="btnReglages" aria-label="Réglages">⚙</button>
 </header>
@@ -133,7 +137,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--bois2);padding:6px 0}
    HB Relevé — Héritage Bois — relevé de chantier hors ligne
    Version 0.1 (17/11/2026). Données stockées sur le téléphone (IndexedDB).
    ===================================================================== */
-const VERSION = '0.7';
+const VERSION = '0.8';
 const FORMAT = 'hb-releve-1';
 
 /* ---------- Listes (vocabulaire Térence, Synthèse § 2) ---------- */
@@ -269,7 +273,7 @@ async function route(){
   if (DICT) await arreterDictee(false); stopMemo(true); fermerCamera(false);
   const h = location.hash.slice(1) || '/';
   const p = h.split('/').filter(Boolean);
-  $('#retour').hidden = p.length === 0;
+  $('#retour').hidden = p.length === 0; $('#logo').hidden = p.length === 0;
   if (p[0] === 'd' && p[1]) { await chargerDossier(p[1]); return vueDossier(); }
   if (p[0] === 'o' && p[1]) { O = await dbGet('ouvertures', p[1]); if(!O) return aller('/'); await chargerDossier(O.dossierId); return vueOuverture(); }
   if (p[0] === 'envoi' && p[1]) { await chargerDossier(p[1]); return vueEnvoi(); }
@@ -342,11 +346,12 @@ document.addEventListener('click', e => {
 /* =================== VUE : liste des dossiers =================== */
 async function vueListe(){
   D = null; O = null;
-  $('#titre').textContent = 'HB Relevé — dossiers';
+  $('#titre').textContent = 'Relevés';
   let ds = (await dbAll('dossiers')).filter(d => !d.archive).sort((a,b)=>b.maj.localeCompare(a.maj));
   if (PRES) ds = ds.map(d => Object.assign(d, {_km: d.geo ? distanceKm(PRES, d.geo) : Infinity})).sort((a,b) => a._km - b._km);
   const ouvs = await dbAll('ouvertures');
   $('#app').innerHTML = `
+  <div class="titreplan"><img src="img/logo.png" alt="Héritage Bois"><div><h2>Relevés de chantier</h2><p>Menuiseries bois — fabrication, restauration, copie d’ancien</p></div></div>
   <div class="carte">
     <h2>Nouveau</h2>
     <div class="barre">
@@ -356,13 +361,14 @@ async function vueListe(){
     ${REG.dbxRefresh ? `<button class="btn sec plein" style="margin-top:8px" id="impDbx">Récupérer les dossiers préparés (Dropbox)</button>` : ''}
     <button class="btn sec plein" style="margin-top:8px" id="pres">📍 ${PRES ? 'Trier par date' : 'Dossiers près de moi'}</button>
   </div>
+  <div class="carte"><h2>Dossiers <span class="muted">${ds.length}</span></h2>
   ${ds.length ? ds.map(d => {
     const os = ouvs.filter(o => o.dossierId === d.id);
     const val = os.filter(o => o.statut === 'validée').length;
     const env = d.envois.length ? `<span class="badge env">envoyé ${d.envois[d.envois.length-1].date.slice(5,10).split('-').reverse().join('/')}</span>` : '';
     return `<div class="item" data-ouvrir="${d.id}"><div class="t"><b>${esc(d.client||'(sans nom)')}${d.test?' · TEST':''}</b>
       <small>${PRES ? (d._km === Infinity ? 'non localisé · ' : `📍 ${d._km < 1 ? Math.round(d._km*1000)+' m' : d._km.toFixed(1).replace('.',',')+' km'} · `) : ''}${esc(d.dateRdv||'')} · ${os.length} ouverture(s) · ${val} validée(s)${d.numero?' · '+esc(d.numero):''}</small></div>${env}</div>`;
-  }).join('') : `<p class="muted">Aucun dossier. Créez-en un, ou importez un dossier préparé par Claude.</p>`}
+  }).join('') : `<p class="muted">Aucun dossier. Créez-en un, ou importez un dossier préparé par Claude.</p>`}</div>
   <details><summary>Dossiers archivés</summary><div id="arch"></div></details>
   <p class="muted">Version ${VERSION} · données gardées sur ce téléphone.</p>`;
   $('#nv').onclick = async () => { const d = nouveauDossier(); await dbPut('dossiers', d); aller('/d/'+d.id); };
@@ -390,9 +396,17 @@ function vueDossier(){
   const resCrit = [D.gamme, D.essence, D.finition, D.vitrage, D.pose].filter(Boolean).join(' · ') || 'à renseigner';
   const resDict = D.dictee ? D.dictee.slice(0,60) + (D.dictee.length>60?'…':'') : 'vide';
   const resMed = md.length ? `${md.filter(m=>m.kind==='photo').length} photo(s) · ${md.filter(m=>m.kind==='video').length} vidéo(s) · ${md.filter(m=>m.kind==='audio').length} mémo(s)` : 'aucun';
+  const nVal = OUVS.filter(o => o.statut === 'validée').length;
   $('#app').innerHTML = `
+  <div class="cartouche">
+    <div class="large"><small>Chantier</small><b>${esc(D.client||'—')}${D.adresse?' — '+esc(D.adresse):''}</b></div>
+    <div><small>Date du relevé</small><b>${D.dateRdv?D.dateRdv.split('-').reverse().join('/'):'—'}</b></div>
+    <div><small>N° dossier</small><b>${esc(D.numero||'—')}</b></div>
+    <div><small>Gamme</small><b>${esc(D.gamme||'—')}</b></div>
+    <div><small>Ouvertures</small><b>${OUVS.length} · <span style="color:${nVal===OUVS.length&&OUVS.length?'var(--ok)':'var(--rouge)'}">${nVal} validée(s)</span></b></div>
+  </div>
   <div class="carte">
-    <h2>Ouvertures (${OUVS.length})</h2>
+    <h2>Ouvertures <span class="muted">${OUVS.length}</span></h2>
     ${OUVS.map(o => {
       const al = controles(o).filter(x=>x[0]==='err').length;
       const st = o.statut === 'validée' ? '<span class="badge ok">validée</span>' : o.statut === 'modifiée' ? '<span class="badge enc">modifiée</span>' : '<span class="badge enc">en cours</span>';
