@@ -3,129 +3,170 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#f9f9f9">
 <title>HB Relevé</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <style>
-/* ===== Style « carnet » Héritage Bois (plans et devis) : fond blanc, Inter, filets noirs, étiquettes de cartouche, rouge = à vérifier ===== */
+/* ===== Présentation « à la Apple » : listes groupées, grands titres, segments, interrupteurs, barre translucide.
+   Une seule teinte d'accent : le bronze du rabot Héritage Bois. ===== */
 @font-face{font-family:'Inter';font-weight:400;font-display:swap;src:url(fonts/inter-latin-400-normal.woff2) format('woff2')}
 @font-face{font-family:'Inter';font-weight:500;font-display:swap;src:url(fonts/inter-latin-500-normal.woff2) format('woff2')}
 @font-face{font-family:'Inter';font-weight:600;font-display:swap;src:url(fonts/inter-latin-600-normal.woff2) format('woff2')}
 @font-face{font-family:'Inter';font-weight:700;font-display:swap;src:url(fonts/inter-latin-700-normal.woff2) format('woff2')}
-:root{--encre:#1b1b1b;--trait:#1b1b1b;--filet:#d6d6d6;--gris:#8a8a8a;--gris2:#5f5f5f;--fond:#f3f3f1;--carte:#fff;--rouge:#c62828;--ok:#2e7d32;--beige:#e9dcc2;--sans:'Inter',system-ui,Roboto,sans-serif;
-  --bois:var(--encre);--bois2:var(--encre);--txt:var(--encre);--ia:var(--rouge);--bleu:var(--encre);--ligne:var(--filet);--alerte:var(--rouge)}
-*{box-sizing:border-box}
+:root{--tint:#8c6d3f;--tint-fond:rgba(140,109,63,.12);--label:#000;--label2:rgba(60,60,67,.6);--label3:rgba(60,60,67,.3);--sep:rgba(60,60,67,.18);--fond:#f2f2f7;--carte:#fff;--champ:#f2f2f7;--rouge:#ff3b30;--orange:#ff9500;--vert:#34c759;--ok:#248a3d;
+  --sans:'Inter',-apple-system,system-ui,Roboto,sans-serif;--r:12px;
+  --encre:#000;--bois:var(--tint);--bois2:var(--tint);--txt:#000;--ia:var(--orange);--bleu:var(--tint);--ligne:var(--sep);--alerte:var(--rouge);--gris:var(--label2)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
-html,body{margin:0;background:var(--fond);color:var(--encre);font:16px/1.4 var(--sans);-webkit-font-smoothing:antialiased}
-header{position:sticky;top:0;z-index:5;background:#fff;color:var(--encre);display:flex;align-items:center;gap:10px;padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top));border-bottom:2px solid var(--trait)}
-header .logo{height:42px;display:block;padding-right:10px;border-right:1px solid var(--filet)}
-header h1{font:600 18px/1.15 var(--sans);margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-header button{background:transparent;border:0;color:var(--encre);font-size:22px;padding:4px 8px;min-width:40px}
-#reseau{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border:1px solid var(--filet);color:var(--gris)}
-#reseau.on{color:var(--ok);border-color:#a5cfa8}
-main{padding:12px;padding-bottom:130px;max-width:760px;margin:0 auto}
-.carte{background:var(--carte);border:1.5px solid var(--trait);padding:14px;margin-bottom:12px}
-.carte h2{font:600 16px/1.2 var(--sans);color:var(--encre);margin:-14px -14px 10px;padding:9px 14px;border-bottom:1px solid var(--trait);display:flex;justify-content:space-between;align-items:baseline}
-label.l{display:block;font-size:10.5px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--gris);margin:14px 0 6px}
-.coche{display:flex;gap:10px;align-items:center;font-size:16px;margin:14px 0 4px;color:var(--encre)}
-.coche input{width:24px;height:24px;flex:none;accent-color:var(--encre)}
-input,textarea,select{width:100%;font:500 16px/1.3 var(--sans);padding:11px 12px;border:1px solid #bdbdbd;border-radius:0;background:#fff;color:var(--encre)}
-input:focus,textarea:focus{outline:2px solid var(--encre);outline-offset:-1px}
-textarea{min-height:76px;resize:vertical;font-weight:400}
-input.cote{font:600 30px/1.1 var(--sans);text-align:center;letter-spacing:.02em;padding:9px;font-variant-numeric:tabular-nums}
-.ia-flag{border-color:var(--rouge)!important;color:var(--rouge);box-shadow:0 0 0 1px var(--rouge)}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chips.g4{display:grid;grid-template-columns:repeat(4,1fr)}
-.chips.g3{display:grid;grid-template-columns:repeat(3,1fr)}
-.chips.g2{display:grid;grid-template-columns:repeat(2,1fr)}
-.chips.g4 .chip,.chips.g3 .chip,.chips.g2 .chip{padding:10px 4px;text-align:center}
-.chip{border:1px solid #bdbdbd;background:#fff;border-radius:0;padding:10px 12px;font:500 15px/1.15 var(--sans);color:var(--encre);min-height:46px}
-.chip.on{background:var(--encre);border-color:var(--encre);color:#fff}
-.chip.ia{background:var(--rouge);border-color:var(--rouge)}
+html,body{margin:0;background:var(--fond);color:var(--label);font:17px/1.35 var(--sans);letter-spacing:-.011em;-webkit-font-smoothing:antialiased}
+svg.i{width:22px;height:22px;flex:none;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+header{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;min-height:52px;padding:4px 8px;padding-top:max(4px,env(safe-area-inset-top));background:rgba(249,249,249,.82);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--sep)}
+header h1{grid-column:2;grid-row:1;font:600 17px/1.2 var(--sans);margin:0;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56vw}
+header .gauche{grid-column:1;grid-row:1;display:flex;align-items:center}
+header .droite{grid-column:3;grid-row:1;display:flex;align-items:center;justify-content:flex-end;gap:6px}
+header button{background:transparent;border:0;color:var(--tint);font:400 17px var(--sans);display:inline-flex;align-items:center;gap:2px;padding:8px 6px}
+header .logo{display:none!important}
+#reseau{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:var(--label2);letter-spacing:0}
+#reseau::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--label3)}
+#reseau.on::before{background:var(--vert)}
+main{padding:6px 16px 140px;max-width:760px;margin:0 auto}
+.grand-titre{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:10px 0 2px}
+.grand-titre h2{font:700 34px/1.1 var(--sans);letter-spacing:-.025em;margin:0}
+.grand-titre p{margin:2px 0 0;color:var(--label2);font-size:15px}
+.grand-titre img{height:58px;opacity:.9}
+.carte{position:relative;background:var(--carte);border-radius:var(--r);padding:12px 16px;margin:38px 0 0}
+.carte h2{position:absolute;left:16px;right:16px;top:-27px;margin:0;font:400 13px/1.2 var(--sans);text-transform:uppercase;letter-spacing:.02em;color:var(--label2);display:flex;justify-content:space-between}
+.carte h2 .muted{font-size:13px}
+label.l{display:block;font-size:13px;font-weight:500;color:var(--label2);margin:14px 0 6px;letter-spacing:0}
+.coche{display:flex;flex-direction:row-reverse;justify-content:space-between;align-items:center;gap:12px;font-size:17px;margin:10px 0 2px;padding:6px 0;color:var(--label)}
+.coche input[type=checkbox],.media input[type=checkbox]{appearance:none;-webkit-appearance:none;width:51px;height:31px;border-radius:16px;background:#e9e9eb;position:relative;flex:none;cursor:pointer;transition:background .2s;margin:0;padding:0;border:0}
+.coche input[type=checkbox]::after,.media input[type=checkbox]::after{content:'';position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.15),0 1px 1px rgba(0,0,0,.16);transition:transform .2s}
+.coche input:checked,.media input:checked{background:var(--vert)}
+.coche input:checked::after,.media input:checked::after{transform:translateX(20px)}
+input,textarea,select{width:100%;font:400 17px/1.3 var(--sans);padding:11px 12px;border:0;border-radius:10px;background:var(--champ);color:var(--label);letter-spacing:-.011em}
+input::placeholder,textarea::placeholder{color:var(--label3)}
+input:focus,textarea:focus{outline:2px solid var(--tint);outline-offset:0;background:#fff}
+textarea{min-height:84px;resize:vertical}
+input.cote{font:600 34px/1.1 var(--sans);text-align:center;letter-spacing:-.02em;padding:10px;font-variant-numeric:tabular-nums}
+.ia-flag{box-shadow:0 0 0 2px var(--orange)!important;background:#fff7eb!important}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:0;background:var(--champ);border-radius:18px;padding:9px 15px;font:500 15px/1.15 var(--sans);color:var(--label);min-height:38px;transition:transform .1s}
+.chip.on{background:var(--tint);color:#fff}
+.chip.ia{box-shadow:0 0 0 2px var(--orange)}
+.chips.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.chips.g4 .chip{border-radius:10px;padding:12px 2px;text-align:center;min-height:46px;font-weight:600}
+.chips.g2,.chips.g3{display:grid;gap:0;background:#e3e3e8;border-radius:10px;padding:2px}
+.chips.g2{grid-template-columns:repeat(2,1fr)}
+.chips.g3{grid-template-columns:repeat(3,1fr)}
+.chips.g2 .chip,.chips.g3 .chip{background:transparent;border-radius:8px;padding:8px 4px;min-height:36px;text-align:center;font-size:14px;font-weight:500;color:var(--label)}
+.chips.g2 .chip.on,.chips.g3 .chip.on{background:#fff;color:var(--label);font-weight:600;box-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04)}
+.chips.g2 .chip.ia,.chips.g3 .chip.ia{box-shadow:0 0 0 2px var(--orange)}
 .ligne2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .ligne3{display:grid;grid-template-columns:1fr;gap:4px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1.5px solid var(--encre);border-radius:0;padding:12px 14px;font:600 15px/1.1 var(--sans);background:var(--encre);color:#fff;min-height:50px}
-.btn.sec{background:#fff;color:var(--encre)}
-.btn.vert{background:var(--ok);border-color:var(--ok)}
-.btn.rouge{background:var(--rouge);border-color:var(--rouge)}
-.btn.bleu{background:var(--encre)}
-.btn.ia{background:#fff;color:var(--rouge);border-color:var(--rouge)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:var(--r);padding:14px 16px;font:600 17px/1.1 var(--sans);letter-spacing:-.01em;background:var(--tint);color:#fff;min-height:50px;transition:transform .1s,opacity .1s}
+.btn:active,.chip:active,.tb:active,.item:active{transform:scale(.97);opacity:.8}
+.btn.sec{background:var(--tint-fond);color:var(--tint)}
+.btn.vert{background:var(--vert)}
+.btn.rouge{background:var(--rouge)}
+.btn.bleu{background:var(--tint)}
+.btn.ia{background:linear-gradient(100deg,#f5a623,#ff6b6b 45%,#b86bff);color:#fff}
 .btn.plein{width:100%}
 .btn:disabled{opacity:.35}
-.barre{display:flex;gap:8px;flex-wrap:wrap}
+.barre{display:flex;gap:10px;flex-wrap:wrap}
 .barre .btn{flex:1}
-/* listes façon tableau de plan */
-.item{display:flex;align-items:center;gap:10px;padding:12px 2px;border:0;border-bottom:1px solid var(--filet);background:#fff;margin:0}
+.item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:.5px solid var(--sep);background:transparent;margin:0;cursor:pointer}
 .item:last-of-type{border-bottom:0}
+.item::after{content:'';width:8px;height:8px;border-right:2px solid var(--label3);border-top:2px solid var(--label3);transform:rotate(45deg);flex:none;margin:0 4px 0 2px}
 .item .t{flex:1;min-width:0}
-.item .t b{display:block;font-weight:600}
-.item .t small{color:var(--gris2);font-size:13.5px}
-.badge{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border:1px solid currentColor;white-space:nowrap}
-.badge.ok{color:var(--ok)}
-.badge.enc{color:var(--rouge)}
-.badge.env{color:var(--gris2)}
+.item .t b{display:block;font-weight:500;font-size:17px}
+.item .t small{color:var(--label2);font-size:15px}
+.badge{font-size:12px;font-weight:600;padding:3px 9px;border-radius:10px;white-space:nowrap}
+.badge.ok{background:#e3f6e7;color:var(--ok)}
+.badge.enc{background:#fff1dc;color:#c46c00}
+.badge.env{background:var(--tint-fond);color:var(--tint)}
 .alertes{margin:0;padding:0;list-style:none}
-.alertes li{border-left:3px solid var(--rouge);background:#fdf1f1;color:var(--rouge);padding:8px 10px;margin-bottom:6px;font-size:14.5px}
-.alertes li.info{border-left-color:var(--gris);background:#f6f6f4;color:var(--gris2)}
-.medias{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-.media{border:1px solid var(--filet);background:#fff;font-size:14px}
-.media img,.media video{width:100%;height:110px;object-fit:cover;display:block;background:#222}
+.alertes li{background:#ffefee;color:#d70015;border-radius:10px;padding:10px 12px;margin-bottom:6px;font-size:15px}
+.alertes li.info{background:var(--champ);color:var(--label2)}
+.medias{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.media{border-radius:var(--r);overflow:hidden;background:var(--champ);font-size:14px}
+.media img,.media video{width:100%;height:120px;object-fit:cover;display:block;background:#222}
 .media audio{width:100%}
-.media .c{padding:6px 8px}
-.media label{display:flex;gap:6px;align-items:center}
-.media input[type=checkbox]{width:22px;height:22px;accent-color:var(--encre)}
-.fab{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:8px 10px;padding-bottom:max(8px,env(safe-area-inset-bottom));background:#fff;border-top:2px solid var(--trait);display:flex;gap:6px;max-width:760px;margin:0 auto}
-.fab .btn{flex:1;padding:12px 6px;font-size:15px}
-.rec{animation:pulse 1s infinite}
-@keyframes pulse{50%{opacity:.55}}
-.muted{color:var(--gris);font-size:13.5px}
-.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--encre);color:#fff;padding:10px 16px;z-index:40;font-size:15px;max-width:90%;text-align:center}
-details summary{cursor:pointer;font-weight:600;color:var(--encre);padding:6px 0}
-.prop{border:1.5px solid var(--rouge);padding:11px;background:#fff;margin-top:10px}
+.media .c{padding:8px 10px}
+.media label{display:flex;flex-direction:row-reverse;justify-content:space-between;gap:6px;align-items:center;font-size:13px}
+.media input[type=checkbox]{transform:scale(.8);transform-origin:right center}
+.fab{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:space-around;align-items:flex-end;padding:6px 6px;padding-bottom:max(8px,env(safe-area-inset-bottom));background:rgba(249,249,249,.86);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--sep);max-width:none;margin:0}
+.fab .btn{flex:1;min-height:46px;margin:2px 4px;font-size:16px}
+.tb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:transparent;border:0;color:var(--tint);font:500 11px/1 var(--sans);padding:6px 2px;max-width:120px}
+.tb svg.i{width:26px;height:26px}
+.tb.principal span.rond{width:50px;height:50px;border-radius:50%;background:var(--tint);color:#fff;display:flex;align-items:center;justify-content:center;margin-top:-18px;box-shadow:0 4px 12px rgba(140,109,63,.35)}
+.tb.principal.rec-on span.rond{background:var(--rouge);box-shadow:0 4px 12px rgba(255,59,48,.4);animation:pulse 1.2s infinite}
+.tb.principal.rec-on{color:var(--rouge)}
+.rec{animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.5}}
+.muted{color:var(--label2);font-size:15px}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);background:rgba(40,40,40,.86);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);color:#fff;padding:12px 18px;border-radius:14px;z-index:40;font-size:15px;font-weight:500;max-width:88%;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+details summary{cursor:pointer;font-weight:500;color:var(--tint);padding:8px 0}
+.prop{border-radius:var(--r);padding:12px 14px;background:linear-gradient(#fff,#fff) padding-box,linear-gradient(100deg,#f5a623,#ff6b6b 45%,#b86bff) border-box;border:2px solid transparent;margin-top:12px}
 .prop label{display:flex;gap:8px;align-items:flex-start;padding:4px 0}
-.prop input{width:22px;height:22px;flex:none}
-.progress{height:8px;border:1px solid var(--encre);background:#fff}
-.progress div{height:100%;background:var(--encre);width:0}
-.step{display:grid;grid-template-columns:110px 52px 1fr 52px;gap:8px;align-items:center;margin-top:8px}
-.step span{font-weight:600}
-.step button{width:52px;height:52px;font-size:26px;border-radius:0;border:1.5px solid var(--encre);background:#fff;color:var(--encre)}
-.step input{text-align:center;font-size:24px;font-weight:600;min-width:0;padding:8px}
-.aide{color:var(--gris);font-size:13px;margin:6px 0 0}
-a{color:var(--encre)}
-/* cartouche (en tête de dossier) */
-.cartouche{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--trait);background:#fff;margin-bottom:12px}
-.cartouche div{padding:6px 10px 7px;border-right:1px solid var(--trait);border-bottom:1px solid var(--trait);min-width:0}
-.cartouche div:nth-child(2n){border-right:0}
-.cartouche div.large{grid-column:1/-1;border-right:0}
+.progress{height:6px;border-radius:3px;background:#e3e3e8;overflow:hidden}
+.progress div{height:100%;background:var(--tint);width:0;border-radius:3px}
+.step{display:grid;grid-template-columns:1fr auto 64px auto;gap:10px;align-items:center;margin-top:8px}
+.step button{width:44px;height:36px;font-size:22px;border-radius:9px;border:0;background:#e3e3e8;color:var(--label)}
+.step input{text-align:center;font-size:20px;font-weight:600;min-width:0;padding:6px}
+.aide{color:var(--label2);font-size:13px;margin:6px 0 0}
+a{color:var(--tint);text-decoration:none}
+.cartouche{display:grid;grid-template-columns:1fr 1fr;background:#fff;border-radius:var(--r);margin:12px 0 0;overflow:hidden}
+.cartouche div{padding:10px 16px;border-bottom:.5px solid var(--sep);min-width:0}
+.cartouche div.large{grid-column:1/-1}
 .cartouche div:nth-last-child(-n+2){border-bottom:0}
-.cartouche small{display:block;font-size:9.5px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--gris)}
-.cartouche b{display:block;font-weight:500;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.titreplan{background:#fff;border:1.5px solid var(--trait);display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:12px}
-.titreplan img{height:56px;padding-right:12px;border-right:1px solid var(--filet)}
-.titreplan h2{font:600 20px/1.2 var(--sans);margin:0}
-.titreplan p{margin:3px 0 0;color:var(--gris);font-size:13px}
+.cartouche small{display:block;font-size:12px;font-weight:500;color:var(--label2)}
+.cartouche b{display:block;font-weight:600;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cartouche div.large b{font-size:22px;letter-spacing:-.02em}
 /* appareil photo intégré */
-details.pli{padding:0}
-details.pli>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer}
+#recbar{position:fixed;left:50%;transform:translateX(-50%);width:min(92vw,520px);top:calc(58px + env(safe-area-inset-top));z-index:30;background:rgba(20,20,20,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);color:#fff;border-radius:22px;padding:12px 16px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+#recbar b{display:inline-flex;align-items:center;gap:7px;font-weight:600}
+#recbar b::before{content:'';width:10px;height:10px;border-radius:50%;background:var(--rouge);animation:pulse 1.2s infinite}
+#recbar #recT{float:right;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.7)}
+#recbar #recTxt{font-size:15px;margin:6px 0 4px;max-height:4.5em;overflow:hidden;color:rgba(255,255,255,.92)}
+#recbar small{color:rgba(255,255,255,.55);font-size:12px}
+#cam{position:fixed;inset:0;z-index:50;background:#000;display:flex;flex-direction:column}
+#cam video{flex:1;width:100%;object-fit:contain;min-height:0;background:#000;touch-action:none}
+#cam .zoom{position:absolute;left:0;right:0;bottom:150px;display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 20px}
+#cam .zoom .presets{display:flex;gap:10px}
+#cam .zoom .presets button{min-width:48px;height:48px;border-radius:24px;border:0;background:rgba(0,0,0,.55);color:#fff;font:inherit;font-weight:700;font-size:15px}
+#cam .zoom .presets button.on{background:#fff;color:#000}
+#cam .zoom input[type=range]{width:100%;max-width:420px;accent-color:#fff;border:0;background:transparent;padding:0}
+#cam .lens{width:56px;height:56px;border-radius:50%;border:2px solid #fff;background:rgba(255,255,255,.12);color:#fff;font-size:22px}
+#cam .haut{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:12px;padding-top:max(12px,env(safe-area-inset-top));color:#fff;background:linear-gradient(rgba(0,0,0,.55),transparent)}
+#cam .haut button{background:rgba(60,60,60,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#fff;border:0;border-radius:20px;padding:10px 16px;font:500 15px var(--sans)}
+#cam .bas{display:flex;justify-content:space-around;align-items:center;padding:18px 10px;padding-bottom:max(18px,env(safe-area-inset-bottom));background:#000}
+#cam .declic{width:78px;height:78px;border-radius:50%;border:5px solid #fff;background:#fff;box-shadow:inset 0 0 0 4px #000}
+#cam .rec{width:64px;height:64px;border-radius:50%;border:4px solid #fff;background:#ff3b30;color:#fff;font-weight:700}
+#cam .rec.on{border-radius:14px;animation:pulse 1s infinite}
+#cam .lib{color:#fff;font-size:13px;text-align:center;width:70px}
+#cam .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .15s}
+#cam .chrono{position:absolute;top:70px;left:50%;transform:translateX(-50%);background:#d32f2f;color:#fff;padding:4px 12px;border-radius:12px;font-weight:700}
+
+details.pli{padding:0;margin-top:10px}
+details.pli>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer}
 details.pli>summary::-webkit-details-marker{display:none}
 details.pli>summary .tt{flex:1;min-width:0}
-details.pli>summary b{display:block;font-size:10px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--gris)}
-details.pli>summary small{display:block;color:var(--encre);font-size:15px;font-weight:500;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-details.pli>summary::after{content:'＋';font-size:18px;color:var(--encre)}
-details.pli[open]>summary::after{content:'−'}
-details.pli[open]>summary{border-bottom:1px solid var(--trait)}
-details.pli>.contenu{padding:0 14px 14px}
-details.pli .carte{border:0;padding:0;margin:0;background:transparent}
+details.pli>summary b{display:block;font-size:17px;font-weight:500;color:var(--label);letter-spacing:-.011em}
+details.pli>summary small{display:block;color:var(--label2);font-size:15px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+details.pli>summary::after{content:'';width:8px;height:8px;border-right:2px solid var(--label3);border-top:2px solid var(--label3);transform:rotate(135deg);transition:transform .2s;margin:0 4px}
+details.pli[open]>summary::after{transform:rotate(-45deg)}
+details.pli>.contenu{padding:0 16px 16px;border-top:.5px solid var(--sep)}
+details.pli .carte{padding:0;margin:0;background:transparent}
 details.pli .carte h2{display:none}
 </style>
 </head>
 <body>
 <header>
-  <button id="retour" aria-label="Retour" hidden>←</button>
+  <div class="gauche"><button id="retour" aria-label="Retour" hidden><svg class="i" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>Retour</button></div>
   <img class="logo" id="logo" src="img/logo.png" alt="Héritage Bois"><h1 id="titre">HB Relevé</h1>
-  <span id="reseau">hors ligne</span>
-  <button id="btnReglages" aria-label="Réglages">⚙</button>
+  <div class="droite"><span id="reseau">Hors ligne</span>
+  <button id="btnReglages" aria-label="Réglages"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></button></div>
 </header>
 <main id="app"></main>
 <input type="file" id="capture" accept="image/*,video/*" capture="environment" hidden>
@@ -137,8 +178,24 @@ details.pli .carte h2{display:none}
    HB Relevé — Héritage Bois — relevé de chantier hors ligne
    Version 0.1 (17/11/2026). Données stockées sur le téléphone (IndexedDB).
    ===================================================================== */
-const VERSION = '0.8';
+const VERSION = '0.9';
+
 const FORMAT = 'hb-releve-1';
+
+/* ---------- Icônes (traits fins, façon SF Symbols) ---------- */
+const ic = d => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+const I = {
+  micro: ic('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>'),
+  stop: ic('<rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"/>'),
+  photo: ic('<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/>'),
+  fini: ic('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+  suivant: ic('<path d="M5 12h14M13 6l6 6-6 6"/>'),
+  plus: ic('<path d="M12 5v14M5 12h14"/>'),
+  lieu: ic('<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>'),
+  ia: ic('<path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>'),
+  envoyer: ic('<path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 14v5h14v-5"/>'),
+  galerie: ic('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>'),
+};
 
 /* ---------- Listes (vocabulaire Térence, Synthèse § 2) ---------- */
 const TYPES = ['OF1','OF2','OF3','OF4','PF1','PF2','PF3','Fixe','Porte 1V','Porte 2V','Volet 1V','Volet 2V','Volet 4V','Autre'];
@@ -346,20 +403,20 @@ document.addEventListener('click', e => {
 /* =================== VUE : liste des dossiers =================== */
 async function vueListe(){
   D = null; O = null;
-  $('#titre').textContent = 'Relevés';
+  $('#titre').textContent = '';
   let ds = (await dbAll('dossiers')).filter(d => !d.archive).sort((a,b)=>b.maj.localeCompare(a.maj));
   if (PRES) ds = ds.map(d => Object.assign(d, {_km: d.geo ? distanceKm(PRES, d.geo) : Infinity})).sort((a,b) => a._km - b._km);
   const ouvs = await dbAll('ouvertures');
   $('#app').innerHTML = `
-  <div class="titreplan"><img src="img/logo.png" alt="Héritage Bois"><div><h2>Relevés de chantier</h2><p>Menuiseries bois — fabrication, restauration, copie d’ancien</p></div></div>
+  <div class="grand-titre"><div><h2>Relevés</h2><p>Héritage Bois · menuiseries bois</p></div><img src="img/logo.png" alt="Héritage Bois"></div>
   <div class="carte">
     <h2>Nouveau</h2>
     <div class="barre">
-      <button class="btn" id="nv">＋ Nouveau dossier</button>
+      <button class="btn" id="nv">${I.plus} Nouveau dossier</button>
       <button class="btn sec" id="imp">Importer un dossier préparé</button>
     </div>
     ${REG.dbxRefresh ? `<button class="btn sec plein" style="margin-top:8px" id="impDbx">Récupérer les dossiers préparés (Dropbox)</button>` : ''}
-    <button class="btn sec plein" style="margin-top:8px" id="pres">📍 ${PRES ? 'Trier par date' : 'Dossiers près de moi'}</button>
+    <button class="btn sec plein" style="margin-top:8px" id="pres">${I.lieu} ${PRES ? 'Trier par date' : 'Dossiers près de moi'}</button>
   </div>
   <div class="carte"><h2>Dossiers <span class="muted">${ds.length}</span></h2>
   ${ds.length ? ds.map(d => {
@@ -367,7 +424,7 @@ async function vueListe(){
     const val = os.filter(o => o.statut === 'validée').length;
     const env = d.envois.length ? `<span class="badge env">envoyé ${d.envois[d.envois.length-1].date.slice(5,10).split('-').reverse().join('/')}</span>` : '';
     return `<div class="item" data-ouvrir="${d.id}"><div class="t"><b>${esc(d.client||'(sans nom)')}${d.test?' · TEST':''}</b>
-      <small>${PRES ? (d._km === Infinity ? 'non localisé · ' : `📍 ${d._km < 1 ? Math.round(d._km*1000)+' m' : d._km.toFixed(1).replace('.',',')+' km'} · `) : ''}${esc(d.dateRdv||'')} · ${os.length} ouverture(s) · ${val} validée(s)${d.numero?' · '+esc(d.numero):''}</small></div>${env}</div>`;
+      <small>${PRES ? (d._km === Infinity ? 'non localisé · ' : `${d._km < 1 ? Math.round(d._km*1000)+' m' : d._km.toFixed(1).replace('.',',')+' km'} · `) : ''}${esc((d.dateRdv||'').split('-').reverse().join('/'))} · ${os.length} ouverture(s) · ${val} validée(s)${d.numero?' · '+esc(d.numero):''}</small></div>${env}</div>`;
   }).join('') : `<p class="muted">Aucun dossier. Créez-en un, ou importez un dossier préparé par Claude.</p>`}</div>
   <details><summary>Dossiers archivés</summary><div id="arch"></div></details>
   <p class="muted">Version ${VERSION} · données gardées sur ce téléphone.</p>`;
@@ -414,7 +471,7 @@ function vueDossier(){
       return `<div class="item" data-o="${o.id}"><div class="t"><b>N°${o.num}${o.repere?' · '+esc(o.repere):''} — ${esc(o.type||'?')}${o.forme==='Cintrée'?' cintrée':''}</b>
       <small>${o.L||'?'} × ${o.H||'?'} ${o.Lref?esc(o.Lref.toLowerCase()):''}${o.piece?' · '+esc(o.piece):''}${nm?' · '+nm+' média(s)':''}${al?' · ⚠ '+al:''}</small></div>${st}</div>`;
     }).join('') || '<p class="muted">Aucune ouverture pour l’instant.</p>'}
-    <button class="btn plein" id="nvO" style="margin-top:6px">＋ Ajouter l’ouverture n°${(OUVS.at(-1)?.num||0)+1}</button>
+    <button class="btn plein" id="nvO" style="margin-top:10px">${I.plus} Ajouter l’ouverture n°${(OUVS.at(-1)?.num||0)+1}</button>
   </div>
   <div data-cible="d">
   ${pli('client', 'Client', resClient, `
@@ -427,7 +484,7 @@ function vueDossier(){
     <label class="coche"><input type="checkbox" id="estTest" ${D.test?'checked':''}> Dossier de TEST</label>
     <label class="l">Localisation du chantier</label>
     ${D.geo ? `<p style="margin:0 0 8px">📍 ${D.geo.lat.toFixed(5)}, ${D.geo.lon.toFixed(5)} <span class="muted">(± ${D.geo.precision} m, ${D.geo.date.slice(0,10).split('-').reverse().join('/')})</span><br><a href="${lienMaps(D.geo)}" target="_blank" rel="noopener">Ouvrir dans Maps</a></p>` : '<p class="aide" style="margin:0 0 8px">Enregistrée toute seule à la première ouverture saisie chez le client (pas à l’atelier).</p>'}
-    <button class="btn sec plein" id="geoBtn">📍 ${D.geo ? 'Relocaliser ici' : 'Localiser le chantier ici'}</button>`)}
+    <button class="btn sec plein" id="geoBtn">${I.lieu} ${D.geo ? 'Relocaliser ici' : 'Localiser le chantier ici'}</button>`)}
   ${pli('criteres', 'Critères généraux', resCrit, `
     <label class="l">Nature des travaux</label>${chips('nature', NATURES, D, true)}
     <label class="l">Gamme</label>${chips('gamme', GAMMES, D)}${champ('gamme', D, {ph:'ou saisir / dicter une autre gamme'})}
@@ -445,8 +502,8 @@ function vueDossier(){
     <button class="btn sec" id="archiver">${D.archive?'Désarchiver':'Archiver le dossier'}</button>
   </div>
   <div class="fab">
-    <button class="btn sec" id="terminer">✓ Terminer</button>
-    <button class="btn bleu" id="envoyer">Envoyer ↑</button>
+    <button class="tb" id="terminer">${I.fini}<span>Terminer</span></button>
+    <button class="tb" id="envoyer">${I.envoyer}<span>Envoyer</span></button>
   </div>`;
   document.querySelectorAll('details.pli').forEach(d => d.addEventListener('toggle', () => { d.open ? PLIS[D.id].add(d.dataset.pli) : PLIS[D.id].delete(d.dataset.pli); }));
   $('#estTest').onchange = e => { D.test = e.target.checked; sauver(); };
@@ -461,7 +518,7 @@ function vueDossier(){
 async function terminer(){
   await sauverMaintenant();
   if (D) PLIS[D.id] = new Set();
-  toast('Enregistré ✓'); aller('/');
+  toast('Enregistré'); aller('/');
 }
 
 /* =================== VUE : ouverture (v0.7 : le strict minimum, la voix pour le reste) =================== */
@@ -506,8 +563,8 @@ function vueOuverture(){
   <div class="carte">
     <h2>Notes et dictée</h2>
     <label class="l">Notes (pose, fermeture, allège, appui, état, fixe, imposte…)</label>${champ('notes', O, {zone:1})}
-    <label class="l">Texte de la dictée</label>${champ('dictee', O, {zone:1, ph:'Touchez 🎤 en bas de l’écran et parlez.'})}
-    <button class="btn ia plein" id="btnIA" style="margin-top:8px" ${navigator.onLine&&REG.cleIA?'':'disabled'}>✨ Remplir les cases depuis la dictée</button>
+    <label class="l">Texte de la dictée</label>${champ('dictee', O, {zone:1, ph:'Touchez « Dicter » en bas de l’écran et parlez.'})}
+    <button class="btn ia plein" id="btnIA" style="margin-top:8px" ${navigator.onLine&&REG.cleIA?'':'disabled'}>${I.ia} Remplir les cases depuis la dictée</button>
     ${!REG.cleIA ? '<p class="aide">IA non configurée : la dictée et le son sont gardés pour Claude au bureau.</p>' : !navigator.onLine ? '<p class="aide">Hors ligne : la dictée et le son sont gardés ; l’IA remplira les cases quand le réseau revient.</p>' : ''}
     <div id="propIA"></div>
   </div>
@@ -529,17 +586,17 @@ function vueOuverture(){
   <div class="carte">
     <h2>Contrôles</h2>
     <ul class="alertes" id="ctrl"></ul>
-    <button class="btn ${O.statut==='validée'?'sec':'vert'} plein" id="valider">${O.statut==='validée'?'✓ Ouverture validée':'✓ Valider l’ouverture'}</button>
+    <button class="btn ${O.statut==='validée'?'sec':'vert'} plein" id="valider">${O.statut==='validée'?I.fini+' Ouverture validée':I.fini+' Valider l’ouverture'}</button>
     <div class="barre" style="margin-top:8px">
       <button class="btn sec" id="dupliquer">Dupliquer</button>
       <button class="btn sec" id="supprimer">Supprimer</button>
     </div>
   </div>
   <div class="fab">
-    <button class="btn sec" id="terminer">Terminer</button>
-    <button class="btn ${DICT?'rouge rec':''}" id="fabDict" aria-label="Dicter">${DICT?'■':'🎤'}</button>
-    <button class="btn" id="fabCam" aria-label="Photo / vidéo">📷</button>
-    <button class="btn" id="suivante">Suivante →</button>
+    <button class="tb" id="terminer">${I.fini}<span>Terminer</span></button>
+    <button class="tb principal ${DICT?'rec-on':''}" id="fabDict" aria-label="Dicter"><span class="rond">${DICT?I.stop:I.micro}</span><span class="lib">${DICT?'Arrêter':'Dicter'}</span></button>
+    <button class="tb" id="fabCam" aria-label="Photo / vidéo">${I.photo}<span>Photo</span></button>
+    <button class="tb" id="suivante">${I.suivant}<span>Suivante</span></button>
   </div>`;
   majControles();
   document.querySelectorAll('details.pli').forEach(d => d.addEventListener('toggle', () => { d.open ? PLIS[D.id].add(d.dataset.pli) : PLIS[D.id].delete(d.dataset.pli); }));
@@ -581,21 +638,21 @@ function vueOuverture(){
 function majControles(){
   const el = $('#ctrl'); if (!el) return;
   const a = controles(O);
-  el.innerHTML = a.length ? a.map(x => `<li class="${x[0]==='info'?'info':''}">${x[0]==='err'?'⚠':'ℹ'} ${esc(x[1])}</li>`).join('') : '<li class="info" style="background:#d9f0df;color:#1f7a3a">✓ Aucun point bloquant</li>';
+  el.innerHTML = a.length ? a.map(x => `<li class="${x[0]==='info'?'info':''}">${esc(x[1])}</li>`).join('') : '<li class="info" style="background:#e3f6e7;color:#248a3d">Aucun point bloquant</li>';
 }
 
 /* =================== Médias : photo / vidéo / mémo =================== */
 let mediaCible = null;
 function blocMedias(list){
   return `<div class="barre" style="margin-bottom:10px">
-    <button class="btn" data-cap="1">📷 Photo / vidéo</button>
+    <button class="btn" data-cap="1">${I.photo} Photo / vidéo</button>
   </div>
-  <button class="btn sec plein" data-gal="1" style="margin-bottom:10px;min-height:40px;padding:8px">Ajouter depuis la galerie</button>
+  <button class="btn sec plein" data-gal="1" style="margin-bottom:12px">${I.galerie} Ajouter depuis la galerie</button>
   <div class="medias">${list.map(m => `
     <div class="media">
       ${m.kind==='photo' ? `<img src="${urlMedia(m)}" alt="">` : m.kind==='video' ? `<video src="${urlMedia(m)}" controls preload="metadata"></video>` : `<div class="c"><b>🎙 Mémo</b></div><audio src="${urlMedia(m)}" controls></audio>`}
       <div class="c">
-        ${m.kind==='photo' ? `<label><input type="checkbox" data-tele="${m.id}" ${m.telemetre?'checked':''}> 📏 Écran du télémètre</label>` : `<label><input type="checkbox" data-transcrire="${m.id}" ${m.transcrire?'checked':''}> À transcrire${m.kind==='audio'?' (dictée)':''}</label>`}
+        ${m.kind==='photo' ? `<label><input type="checkbox" data-tele="${m.id}" ${m.telemetre?'checked':''}> Écran du télémètre</label>` : `<label><input type="checkbox" data-transcrire="${m.id}" ${m.transcrire?'checked':''}> À transcrire${m.kind==='audio'?' (dictée)':''}</label>`}
         <input data-mnote="${m.id}" value="${esc(m.note||'')}" placeholder="légende" style="margin-top:6px;padding:6px;font-size:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><small class="muted">${m.date.slice(11,16)}${m.envoye?' · envoyé':''}</small>
         <button class="chip" data-mdel="${m.id}" style="padding:4px 10px">✕</button></div>
@@ -642,7 +699,7 @@ async function ouvrirCamera(ouvertureId){
   catch (e) { try { lsSet('hb-cam-device',''); stream = await fluxCamera(null); } catch (e2) { toast('Appareil photo refusé : autorisez-le dans Chrome'); return repli(); } }
   const el = document.createElement('div'); el.id = 'cam';
   el.innerHTML = `<video autoplay playsinline muted></video><div class="flash"></div>
-    <div class="haut"><button id="camFermer">✕ Fermer</button><span id="camNb"></span><button id="camTele">📏 Télémètre : non</button></div>
+    <div class="haut"><button id="camFermer">✕ Fermer</button><span id="camNb"></span><button id="camTele">Télémètre</button></div>
     <div class="zoom" hidden><div class="presets"></div><input type="range" id="camZoom"></div>
     <div class="bas"><div class="lib"><button class="rec" id="camRec" aria-label="Vidéo"></button><br>Vidéo</div>
       <div class="lib"><button class="declic" id="camPhoto" aria-label="Photo"></button><br>Photo</div>
@@ -702,7 +759,7 @@ async function ouvrirCamera(ouvertureId){
     } catch (e) { toast('Objectif indisponible'); lsSet('hb-cam-device',''); CAM.stream = await fluxCamera(null); await brancherFlux(); }
   };
   el.querySelector('#camFermer').onclick = () => fermerCamera(true);
-  el.querySelector('#camTele').onclick = e => { CAM.tele = !CAM.tele; e.target.textContent = '📏 Télémètre : ' + (CAM.tele ? 'OUI' : 'non'); e.target.style.background = CAM.tele ? '#c26a00' : ''; };
+  el.querySelector('#camTele').onclick = e => { CAM.tele = !CAM.tele; e.target.textContent = CAM.tele ? 'Télémètre ✓' : 'Télémètre'; e.target.style.background = CAM.tele ? '#ff9500' : ''; };
   el.querySelector('#camPhoto').onclick = async () => {
     try {
       let blob = null;
@@ -783,8 +840,8 @@ function blocDictee(k){
     <h2>Dictée</h2>
     ${champ('dictee', c, {zone:1, ph:'ex. Chantier Diaz à Tarascon, recouvrement Boizéal, pré-peinture blanche, dépose totale…'})}
     <div class="barre" style="margin-top:8px">
-      <button class="btn ${DICT?'rouge rec':''}" id="btnDictee">${DICT?'■ Arrêter':'🎤 Dicter'}</button>
-      <button class="btn ia" id="btnIA" ${navigator.onLine&&REG.cleIA?'':'disabled'}>✨ Remplir les cases</button>
+      <button class="btn ${DICT?'rouge rec':''}" id="btnDictee">${DICT?I.stop+' Arrêter':I.micro+' Dicter'}</button>
+      <button class="btn ia" id="btnIA" ${navigator.onLine&&REG.cleIA?'':'disabled'}>${I.ia} Remplir les cases</button>
     </div>
     <div id="propIA"></div>
   </div>`;
@@ -816,12 +873,12 @@ async function basculerDictee(k){
     r.start(); DICT.sr = r;
   } catch(_){} }
   const bar = document.createElement('div'); bar.id = 'recbar';
-  bar.innerHTML = '<b>● Dictée</b> <span id="recT">0:00</span><div id="recTxt"></div><small>Touchez ici ou ■ pour arrêter</small>';
+  bar.innerHTML = '<b>Dictée en cours</b><span id="recT">0:00</span><div id="recTxt"></div><small>Touchez ici ou « Arrêter » pour terminer</small>';
   bar.onclick = () => arreterDictee(true);
   document.body.appendChild(bar);
   DICT.timer = setInterval(majBarre, 500); majBarre();
-  const fb = $('#fabDict'); if (fb) { fb.textContent = '■'; fb.classList.add('rouge','rec'); }
-  const bd = $('#btnDictee'); if (bd) { bd.textContent = '■ Arrêter'; bd.classList.add('rouge','rec'); }
+  const fb = $('#fabDict'); if (fb) { fb.classList.add('rec-on'); fb.querySelector('.rond').innerHTML = I.stop; fb.querySelector('.lib').textContent = 'Arrêter'; }
+  const bd = $('#btnDictee'); if (bd) { bd.innerHTML = I.stop + ' Arrêter'; bd.classList.add('rouge','rec'); }
 }
 function majBarre(){
   if (!DICT) return; const s = Math.round((Date.now() - DICT.t0)/1000);
@@ -926,7 +983,7 @@ async function proposerIA(k, res){
   const val = p => { const v = getP(c, p); return Array.isArray(v) ? v.join(', ') : v === true ? 'oui' : v === false ? 'non' : v; };
   zone.innerHTML = `<div class="prop"><b>${faits.length ? `L’IA a rempli ${faits.length} case(s) — vérifiez l’orange` : 'Rien de nouveau à remplir'}</b>
     ${faits.filter(p=>p!=='notes').map(p => `<div>• ${esc(NOMS(p))} : <b>${esc(val(p))}</b></div>`).join('')}${faits.includes('notes') ? '<div>• Notes complétées</div>' : ''}
-    ${(res.telemetre||[]).length ? `<div style="margin-top:6px"><b>📏 Télémètre</b>${res.telemetre.map(t => `<div>• ${esc(t)}</div>`).join('')}</div>` : ''}
+    ${(res.telemetre||[]).length ? `<div style="margin-top:6px"><b>Télémètre</b>${res.telemetre.map(t => `<div>• ${esc(t)}</div>`).join('')}</div>` : ''}
     ${doutesHTML(res)}
     ${faits.length ? '<button class="btn sec plein" id="annIA" style="margin-top:8px">Annuler ces changements</button>' : ''}</div>`;
   if ($('#annIA')) $('#annIA').onclick = async () => { Object.keys(c).forEach(x => delete c[x]); Object.assign(c, avant); await sauverMaintenant(); rafraichir(); toast('Changements annulés'); };
@@ -1085,7 +1142,7 @@ function vueEnvoi(){
       ${!D.client ? '<li>Nom du client manquant</li>' : ''}
       ${nonVal.length ? `<li>${nonVal.length} ouverture(s) non validée(s) : ${nonVal.map(o=>'n°'+o.num).join(', ')}</li>` : ''}
       ${ia ? `<li class="info">${ia} fiche(s) avec des cases IA non vérifiées</li>` : ''}
-      ${!nonVal.length && D.client && !ia ? '<li class="info" style="background:#d9f0df;color:#1f7a3a">✓ Tout est validé</li>' : ''}
+      ${!nonVal.length && D.client && !ia ? '<li class="info" style="background:#e3f6e7;color:#248a3d">Tout est validé</li>' : ''}
     </ul>
     <p class="muted">${OUVS.length} ouverture(s) · ${MEDIAS.length} média(s) (${(taille/1048576).toFixed(1)} Mo) · ${aTr} à transcrire${D.envois.length?` · déjà envoyé ${D.envois.length} fois (seuls les nouveaux médias repartent)`:''}</p>
   </div>
@@ -1099,7 +1156,7 @@ function vueEnvoi(){
   </div>
   <div class="carte">
     <h2>Sans Dropbox direct</h2>
-    <button class="btn sec plein" id="goZip">Partager le dossier (.zip) → appli Dropbox, mail…</button>
+    <button class="btn sec plein" id="goZip">Partager le dossier (.zip) : Dropbox, mail…</button>
   </div>
   ${D.envois.length ? `<div class="carte"><h2>Historique</h2>${D.envois.map(e=>`<div class="muted">${e.date.slice(0,16).replace('T',' ')} · ${esc(e.mode)} · ${esc(e.chemin||'')}</div>`).join('')}</div>` : ''}`;
   if ($('#goDbx')) $('#goDbx').onclick = envoyerDropbox;
@@ -1188,7 +1245,7 @@ function vueReglages(){
 }
 
 /* =================== Réseau, démarrage =================== */
-function majReseau(){ const r = $('#reseau'); r.textContent = navigator.onLine ? 'en ligne' : 'hors ligne'; r.className = navigator.onLine ? 'on' : ''; }
+function majReseau(){ const r = $('#reseau'); r.textContent = navigator.onLine ? 'En ligne' : 'Hors ligne'; r.className = navigator.onLine ? 'on' : ''; }
 window.addEventListener('online', () => { majReseau(); if (/^#\/(d|o|envoi)\//.test(location.hash)) rafraichir(); });
 window.addEventListener('offline', majReseau);
 (async function demarrer(){
